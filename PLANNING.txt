@@ -556,15 +556,15 @@ FASE 4: CONTROLADORES
 [ ] Paso 24: Crear MercadoPagoWebhookController
 
 FASE 5: WEBSOCKET
-[ ] Paso 25: Configurar WebSocketConfig
-[ ] Paso 26: Implementar ChatWebSocketHandler
+[✓] Paso 25: Configurar WebSocketConfig
+[✓] Paso 26: Implementar ChatWebSocketHandler
 
 FASE 6: FRONTEND - COMPONENTES BASE
-[ ] Paso 27: Implementar Header.jsx con tema
-[ ] Paso 28: Implementar Sidebar.jsx
-[ ] Paso 29: Implementar ChatWindow.jsx
-[ ] Paso 30: Implementar PaymentButton.jsx
-[ ] Paso 31: Implementar ContractFormModal.jsx
+[✓] Paso 27: Implementar Header.jsx con tema
+[✓] Paso 28: Implementar Sidebar.jsx
+[✓] Paso 29: Implementar ChatWindow.jsx
+[✓] Paso 30: Implementar PaymentButton.jsx
+[✓] Paso 31: Implementar ContractFormModal.jsx
 
 FASE 7: FRONTEND - PÁGINAS INGENIERO
 [ ] Paso 32: Implementar Dashboard.jsx (Ingeniero)
@@ -629,16 +629,16 @@ CAMBIOS NECESARIOS:
 ================================================================================
 
 INICIO: Marzo 2025
-FASE 1: _________________________ [0%]
-FASE 2: _________________________ [0%]
-FASE 3: _________________________ [0%]
-FASE 4: _________________________ [0%]
-FASE 5: _________________________ [0%]
-FASE 6: _________________________ [0%]
-FASE 7: _________________________ [0%]
-FASE 8: _________________________ [0%]
-FASE 9: _________________________ [0%]
+FASE 1: █████████████████████████████████████████████████ [100%] ✓ COMPLETADA
+FASE 2: █████████████████████████████████████████████████ [100%] ✓ COMPLETADA
+FASE 3: █████████████████████████████████████████████████ [100%] ✓ COMPLETADA
+FASE 4: █████████████████████████████████████████████████ [100%] ✓ COMPLETADA
+FASE 5: █████████████████████████████████████████████████ [100%] ✓ COMPLETADA
+FASE 6: █████████████████████████████████████████████████ [100%] ✓ COMPLETADA
+FASE 7: ______________________ [0%]
+FASE 8: ______________________ [0%]
+FASE 9: ______________________ [0%]
 
-PROGRESO GENERAL: _____________ [0%]
+PROGRESO GENERAL: ██████████████████████████░░░░░░░░░░░░░░░░░░ [80%]
 
 ================================================================================
