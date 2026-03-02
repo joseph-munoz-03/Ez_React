@@ -1,0 +1,16 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Logo EZ - Versión Color (Verde - Variante principal) -->
+  <!-- Reemplaza este contenido con tu logo real -->
+  <defs>
+    <style>
+      .logo-text { font-family: Arial, sans-serif; font-size: 80px; font-weight: bold; fill: #10B981; }
+      .logo-circle { fill: #10B981; opacity: 0.15; }
+    </style>
+  </defs>
+  
+  <!-- Fondo circular -->
+  <circle cx="100" cy="100" r="95" class="logo-circle" stroke="#10B981" stroke-width="2"/>
+  
+  <!-- Texto EZ -->
+  <text x="100" y="130" class="logo-text" text-anchor="middle">EZ</text>
+</svg>

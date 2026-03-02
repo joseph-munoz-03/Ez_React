@@ -5,13 +5,18 @@ import com.example.ez.service.auth.AuthService;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")
 public class AuthController {
 
     private final AuthService service;
 
     public AuthController(AuthService service) {
         this.service = service;
+    }
+
+    @PostMapping("/login")
+    public String login(@RequestBody User user) {
+        return service.login(user.getEmail(), user.getContrasena());
     }
 
     @PostMapping("/register")

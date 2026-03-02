@@ -1,4 +1,4 @@
-package com.example.ez.controller.ingeniero;
+package com.example.ez.controller.cliente;
 
 import com.example.ez.service.contract.ContractService;
 import com.example.ez.service.payment.PaymentService;
@@ -8,31 +8,32 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 
 @RestController
-@RequestMapping("/api/ingeniero/dashboard")
-public class IngenieroDashboardController {
+@RequestMapping("/api/cliente/dashboard")
+public class ClienteDashboardController {
 
     private final ContractService contractService;
     private final PaymentService paymentService;
 
-    public IngenieroDashboardController(ContractService contractService, PaymentService paymentService) {
+    public ClienteDashboardController(ContractService contractService, PaymentService paymentService) {
         this.contractService = contractService;
         this.paymentService = paymentService;
     }
 
     /**
-     * Obtener estadísticas del ingeniero
+     * Obtener estadísticas del cliente
      */
     @GetMapping("/estadisticas")
     public ResponseEntity<DashboardEstadisticas> obtenerEstadisticas(
             @RequestParam(defaultValue = "MENSUAL") String periodo,
             Authentication authentication) {
-        Long ingenieroId = Long.parseLong(authentication.getName());
+        Long clienteId = Long.parseLong(authentication.getName());
         
-        var contratos = contractService.obtenerContratosIngeniero(ingenieroId);
-        var pagos = paymentService.obtenerHistorialPagos(ingenieroId);
+        var contratos = contractService.obtenerContratosCliente(clienteId);
+        var pagos = paymentService.obtenerHistorialPagos(clienteId);
         
-        BigDecimal ingresosTotales = pagos.stream()
-            .map(p -> p.getMonto())
+        BigDecimal gastosTotales = pagos.stream()
+            .filter(p -> p.getMonto().compareTo(BigDecimal.ZERO) < 0)
+            .map(p -> p.getMonto().abs())
             .reduce(BigDecimal.ZERO, BigDecimal::add);
         
         long contratosActivos = contratos.stream()
@@ -44,7 +45,7 @@ public class IngenieroDashboardController {
             .count();
         
         DashboardEstadisticas stats = new DashboardEstadisticas(
-            ingresosTotales,
+            gastosTotales,
             contratos.size(),
             (int) contratosActivos,
             (int) contratosFinalizados
@@ -57,20 +58,20 @@ public class IngenieroDashboardController {
      * Clase DTO para estadísticas
      */
     public static class DashboardEstadisticas {
-        private BigDecimal ingresosTotales;
+        private BigDecimal gastosTotales;
         private int contratosTotal;
         private int contratosActivos;
         private int contratosFinalizados;
 
-        public DashboardEstadisticas(BigDecimal ingresosTotales, int contratosTotal, 
+        public DashboardEstadisticas(BigDecimal gastosTotales, int contratosTotal, 
                                      int contratosActivos, int contratosFinalizados) {
-            this.ingresosTotales = ingresosTotales;
+            this.gastosTotales = gastosTotales;
             this.contratosTotal = contratosTotal;
             this.contratosActivos = contratosActivos;
             this.contratosFinalizados = contratosFinalizados;
         }
 
-        public BigDecimal getIngresosTotales() { return ingresosTotales; }
+        public BigDecimal getGastosTotales() { return gastosTotales; }
         public int getContratosTotal() { return contratosTotal; }
         public int getContratosActivos() { return contratosActivos; }
         public int getContratosFinalizados() { return contratosFinalizados; }

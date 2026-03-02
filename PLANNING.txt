@@ -1,0 +1,644 @@
+================================================================================
+                    PROYECTO EZ - PLANO DE IMPLEMENTACIÓN
+================================================================================
+Fecha: Marzo 2025
+Estado Actual: Análisis Completado
+Arquitectura: Spring Boot + React + WebSocket + Mercado Pago
+
+================================================================================
+1. ESTRUCTURA DE COLORES (TEMA)
+================================================================================
+
+COLORES PRINCIPALES:
+- Blanco (#FFFFFF)
+- Gris (#6B7280 / #F3F4F6)
+- Negro (#1F2937 / #111827)
+
+COLORES ACOMPAÑANTES (según contexto):
+- Verde (#10B981)
+- Morado (#A855F7)
+- Azul (#3B82F6)
+- Rojo (#EF4444)
+- Gris Secundario (#D1D5DB)
+
+LOGO ADAPTATIVO:
+- Logo Blanco: Para fondos oscuros (Negro/Gris oscuro)
+- Logo Gris: Para fondos neutros
+- Logo Negro: Para fondos claros (Blanco)
+- Logo Verde/Morado/Azul: Variantes opcionales
+
+UBICACIÓN: /frontend/src/themes/theme.config.js
+APLICAR A: Header, Sidebar, Botones, Cards, Gráficas
+
+================================================================================
+2. ARQUITECTURA DE CARPETAS (Estructura Confirmada)
+================================================================================
+
+BACKEND (Spring Boot):
+└── src/main/java/com/ez/
+    ├── config/
+    │   ├── SecurityConfig.java
+    │   ├── JwtFilter.java
+    │   ├── JwtUtil.java
+    │   └── WebSocketConfig.java
+    │
+    ├── model/
+    │   ├── enums/
+    │   │   ├── Role.java (CLIENTE, INGENIERO, ADMIN)
+    │   │   ├── Genero.java
+    │   │   ├── ContractStatus.java (ACTIVO, EN_PROCESO, CANCELADO)
+    │   │   ├── PaymentType.java (DEPOSIT, WITHDRAWAL)
+    │   │   └── PaymentStatus.java (PENDIENTE, COMPLETADO, FALLIDO)
+    │   │
+    │   ├── user/ → User.java
+    │   ├── contract/ → Contract.java, Entrega.java, Payment.java
+    │   ├── chat/ → Chat.java, ChatMessage.java
+    │   └── marketplace/ → Publication.java
+    │
+    ├── repository/
+    │   ├── user/ → UserRepository.java
+    │   ├── contract/ → ContractRepository.java, EntregaRepository.java, PaymentRepository.java
+    │   ├── chat/ → ChatRepository.java, ChatMessageRepository.java
+    │   └── marketplace/ → PublicationRepository.java
+    │
+    ├── service/
+    │   ├── auth/ → AuthService.java
+    │   ├── user/ → UserService.java
+    │   ├── contract/ → ContractService.java
+    │   ├── payment/ → MercadoPagoService.java, PaymentService.java
+    │   ├── chat/ → ChatService.java
+    │   ├── marketplace/ → PublicationService.java
+    │   └── email/ → EmailService.java
+    │
+    ├── controller/
+    │   ├── auth/ → AuthController.java
+    │   ├── ingeniero/
+    │   │   ├── IngenieroContractController.java
+    │   │   ├── IngenieroDashboardController.java
+    │   │   └── IngenieroPublicationController.java
+    │   ├── cliente/
+    │   │   ├── ClienteContractController.java
+    │   │   ├── ClientePaymentController.java
+    │   │   └── ClienteMarketplaceController.java
+    │   ├── common/
+    │   │   ├── UserController.java
+    │   │   └── ChatController.java
+    │   └── webhook/ → MercadoPagoWebhookController.java
+    │
+    ├── websocket/ → ChatWebSocketController.java
+    │
+    └── EzReactApplication.java
+
+
+FRONTEND (React):
+└── src/
+    ├── assets/
+    │   └── logos/
+    │       ├── logo_blanco.svg
+    │       ├── logo_gris.svg
+    │       ├── logo_negro.svg
+    │       └── logo_color.svg
+    │
+    ├── themes/
+    │   └── theme.config.js (COLORES GLOBALES)
+    │
+    ├── pages/
+    │   ├── public/
+    │   │   ├── Index.jsx
+    │   │   ├── Login.jsx
+    │   │   └── Register.jsx
+    │   │
+    │   ├── ingeniero/
+    │   │   ├── Dashboard.jsx
+    │   │   ├── Perfil.jsx
+    │   │   ├── Seguridad.jsx
+    │   │   ├── Chats.jsx
+    │   │   ├── Marketplace.jsx
+    │   │   └── Calendario.jsx
+    │   │
+    │   ├── cliente/
+    │   │   ├── Dashboard.jsx
+    │   │   ├── Perfil.jsx
+    │   │   ├── Seguridad.jsx
+    │   │   ├── Chats.jsx
+    │   │   ├── Marketplace.jsx
+    │   │   └── Calendario.jsx
+    │   │
+    │   └── admin/
+    │       └── (RESERVADO)
+    │
+    └── components/
+        ├── common/
+        │   ├── Header.jsx
+        │   ├── Sidebar.jsx
+        │   ├── ChatWindow.jsx
+        │   ├── PaymentButton.jsx
+        │   └── ContractFormModal.jsx
+        │
+        ├── ingeniero/
+        │   ├── GraficaIngresos.jsx
+        │   └── GraficaContratos.jsx
+        │
+        └── cliente/
+            └── PaymentHistory.jsx
+
+================================================================================
+3. FUNCIONALIDADES A IMPLEMENTAR (Por Rol)
+================================================================================
+
+3.1 DASHBOARD (Ingeniero/Cliente)
+────────────────────────────────────────────────────────────────────────
+[ ] Bienvenida con nombre del usuario
+[ ] Secciones con botones de acceso rápido
+[ ] Header con navegación (Dashboard, Perfil, Chats, Marketplace, Calendario)
+[ ] Botón circular de perfil en esquina superior derecha
+[ ] Gráficas de ingresos (filtro: Diario, Semanal, Mensual, Anual)
+[ ] Gráficas de contratos (Total, En Proceso, Cancelados) con mismo filtro
+[ ] Diseño responsivo con tema de colores
+
+ENDPOINTS NECESARIOS:
+- GET /api/ingeniero/dashboard/estadisticas?periodo=DIARIO|SEMANAL|MENSUAL|ANUAL
+- GET /api/cliente/dashboard/estadisticas?periodo=DIARIO|SEMANAL|MENSUAL|ANUAL
+
+3.2 PERFIL (Ingeniero/Cliente)
+────────────────────────────────────────────────────────────────────────
+[ ] Foto de perfil (avatarUrl)
+[ ] Información personal: nombre, apellido, email, teléfono
+[ ] Nickname/Nombre de usuario
+[ ] Descripción personal
+[ ] Etiquetas (tags)
+[ ] Botón "Actualizar datos"
+[ ] Opción para cambiar foto de perfil
+[ ] Link a sección de Seguridad
+
+ENDPOINTS NECESARIOS:
+- GET /api/usuarios/{id}/perfil
+- PUT /api/usuarios/{id}/perfil
+- POST /api/usuarios/{id}/foto (upload)
+- GET /api/usuarios/{id}/etiquetas
+- PUT /api/usuarios/{id}/etiquetas
+
+3.3 SEGURIDAD (Ingeniero/Cliente)
+────────────────────────────────────────────────────────────────────────
+[ ] Mostrar correo (read-only)
+[ ] Campo: Contraseña antigua
+[ ] Campo: Contraseña nueva
+[ ] Campo: Confirmar contraseña
+[ ] Validación de contraseña antigua
+[ ] Validación de fortaleza de contraseña nueva
+[ ] Mensajes de éxito/error
+
+ENDPOINTS NECESARIOS:
+- PUT /api/usuarios/{id}/seguridad/cambiar-contrasena
+- GET /api/usuarios/{id}/seguridad/email
+
+3.4 CHATS (Ingeniero/Cliente)
+────────────────────────────────────────────────────────────────────────
+[ ] Lista de chats (contactos)
+[ ] WebSocket para actualización en tiempo real (ws://localhost:8080/chat)
+[ ] Ventana de chat con historial de mensajes
+[ ] Input para enviar mensajes
+[ ] Botón para adjuntar archivos (imágenes, documentos)
+[ ] Botón de "Ayuda" (esquina inferior derecha)
+    - Opción 1: Chatbot automático
+    - Opción 2: Chat con administrador
+    - Seleccionar y enviar al chat elegido
+[ ] Botón para abrir "Formulario de Contrato"
+[ ] Al crear contrato: 
+    - Se genera automáticamente en base de datos
+    - Aparece en sección de Contratos
+    - Se envía correo a ambas partes
+
+ENDPOINTS NECESARIOS:
+- GET /api/chats/mis-chats
+- GET /api/chats/{chatId}/mensajes
+- POST /api/chats/{chatId}/mensaje (enviar)
+- POST /api/chats/{chatId}/archivo (adjuntar)
+- WS /chat/{userId} (WebSocket)
+- POST /api/contratos/crear (desde formulario)
+
+3.5 CONTRATOS
+────────────────────────────────────────────────────────────────────────
+[ ] Listado de contratos activos
+[ ] Detalles de contrato: descripción, duración, pagos, estado
+[ ] Formulario de creación de contrato (en chat)
+[ ] Campos del formulario:
+    - Título
+    - Descripción
+    - Presupuesto
+    - Duración (días)
+    - Número de pagos
+    - Fechas de pago (calculadas automáticamente)
+    - Estado
+[ ] Cambio de estado (En proceso, Cancelado, Completado)
+[ ] Envío de correos al cerrar contrato
+
+ENDPOINTS NECESARIOS:
+- GET /api/contratos/mis-contratos
+- GET /api/contratos/{id}
+- POST /api/contratos (crear)
+- PUT /api/contratos/{id} (actualizar estado/datos)
+- DELETE /api/contratos/{id} (cancelar)
+- POST /api/contratos/{id}/enviar-correo
+
+3.6 MARKETPLACE (Ingeniero/Cliente)
+────────────────────────────────────────────────────────────────────────
+PARA INGENIERO:
+[ ] Ver TODAS las publicaciones
+[ ] Crear nueva publicación
+[ ] Editar/Eliminar sus propias publicaciones
+[ ] Filtros:
+    - Por usuario (quien las publicó)
+    - Por base de datos (MySQL, PostgreSQL, MongoDB, etc.)
+    - Por lenguaje de programación (Java, Python, JavaScript, etc.)
+
+PARA CLIENTE:
+[ ] Ver TODAS las publicaciones
+[ ] Filtros igual que ingeniero
+[ ] NO puede crear publicaciones
+[ ] NO ve solo sus publicaciones
+
+CAMPOS DE PUBLICACIÓN:
+- Título
+- Descripción
+- Tecnologías
+- Precio
+- Autor (Usuario)
+- Fecha de creación
+- Categoría
+
+ENDPOINTS NECESARIOS:
+- GET /api/publicaciones (con filtros)
+- GET /api/publicaciones/{id}
+- POST /api/publicaciones (ingeniero)
+- PUT /api/publicaciones/{id} (ingeniero)
+- DELETE /api/publicaciones/{id} (ingeniero)
+- GET /api/publicaciones/buscar?base=MySQL&lenguaje=Java
+
+3.7 SALDO/PAGOS
+────────────────────────────────────────────────────────────────────────
+[ ] Mostrar saldo actual
+[ ] Botón "Recargar saldo"
+    - Integrar Mercado Pago
+    - Mostrar formulario de pago
+    - Verificar cantidad pagada
+    - Actualizar saldo en tiempo real
+[ ] Botón "Retirar saldo"
+    - Ingresar cuenta Mercado Pago
+    - Especificar cantidad
+    - Procesar retiro (API Mercado Pago)
+[ ] Historial de movimientos (depósitos, retiros)
+[ ] Soporte para BetPlay (actualizar saldo inmediatamente)
+[ ] Correo de confirmación de pago
+
+CAMPOS ADICIONALES EN BD:
+- User.saldo (decimal)
+- User.cuentaMercadoPago (opcional)
+
+ENDPOINTS NECESARIOS:
+- GET /api/saldo/mi-saldo
+- POST /api/saldo/recargar
+- POST /api/saldo/retirar
+- POST /api/mercadopago/webhook (pago completado)
+- GET /api/saldo/historial
+
+3.8 CALENDARIO
+────────────────────────────────────────────────────────────────────────
+[ ] Calendario visual (mensual)
+[ ] Automatización:
+    - Al crear contrato con N días y M pagos
+    - Marcar automáticamente las fechas de pago
+    - Ejemplo: Contrato 5 feb, 15 días, 3 pagos
+      → Marca: 20 feb, 7 mar, 22 mar
+[ ] Al pulsar fecha marcada:
+    - Mostrar contrato vinculado
+    - Mostrar detalles del pago
+    - Opción para marcar como completado
+[ ] Filtración por tipo de evento
+
+ENDPOINTS NECESARIOS:
+- GET /api/calendario/eventos?mes=3&anio=2025
+- GET /api/calendario/evento/{fecha}
+- POST /api/calendario/marcar-completado/{contrato_id}
+
+================================================================================
+4. MODELO DE DATOS (BD)
+================================================================================
+
+TABLA: users_ez
+┌──────────────────────────────┐
+│ id (PK)                       │
+│ email (UNIQUE)                │
+│ nombre                        │
+│ apellido                      │
+│ apodo/nickname                │
+│ contraseña (hash)             │
+│ rol (CLIENTE|INGENIERO|ADMIN) │
+│ foto_perfil (URL)             │
+│ descripcion                   │
+│ genero (MASCULINO|FEMENINO)   │
+│ telefono                      │
+│ saldo (DECIMAL)               │
+│ cuenta_mercadopago            │
+│ estado (ACTIVO|INACTIVO)      │
+│ fecha_creacion                │
+│ fecha_actualizacion           │
+└──────────────────────────────┘
+
+TABLA: etiquetas_usuario
+┌──────────────────────────────┐
+│ id (PK)                       │
+│ usuario_id (FK)               │
+│ etiqueta (VARCHAR)            │
+└──────────────────────────────┘
+
+TABLA: contratos_ez
+┌──────────────────────────────┐
+│ id (PK)                       │
+│ cliente_id (FK)               │
+│ ingeniero_id (FK)             │
+│ titulo                        │
+│ descripcion                   │
+│ presupuesto (DECIMAL)         │
+│ estado (ACTIVO|PROCESO|...)   │
+│ vigencia_dias                 │
+│ num_pagos                     │
+│ fecha_inicio                  │
+│ fecha_fin                     │
+│ fecha_creacion                │
+│ fecha_actualizacion           │
+└──────────────────────────────┘
+
+TABLA: entregas_ez
+┌──────────────────────────────┐
+│ id (PK)                       │
+│ contrato_id (FK)              │
+│ numero_entrega                │
+│ fecha_pago_programada         │
+│ monto (DECIMAL)               │
+│ estado (PENDIENTE|COMPLETADA) │
+└──────────────────────────────┘
+
+TABLA: pagos_ez
+┌──────────────────────────────┐
+│ id (PK)                       │
+│ usuario_id (FK)               │
+│ tipo (DEPOSITO|RETIRO)        │
+│ monto (DECIMAL)               │
+│ estado (PENDIENTE|COMPLETADO) │
+│ referencia_mp (Mercado Pago)  │
+│ fecha_creacion                │
+│ fecha_completacion            │
+└──────────────────────────────┘
+
+TABLA: chats_ez
+┌──────────────────────────────┐
+│ id (PK)                       │
+│ usuario1_id (FK)              │
+│ usuario2_id (FK)              │
+│ ultima_actualizacion          │
+│ creado_en                     │
+└──────────────────────────────┘
+
+TABLA: mensajes_chat
+┌──────────────────────────────┐
+│ id (PK)                       │
+│ chat_id (FK)                  │
+│ usuario_id (FK)               │
+│ contenido                     │
+│ tipo (TEXTO|ARCHIVO)          │
+│ url_archivo (nullable)        │
+│ fecha_creacion                │
+└──────────────────────────────┘
+
+TABLA: publicaciones_ez
+┌──────────────────────────────┐
+│ id (PK)                       │
+│ usuario_id (FK)               │
+│ titulo                        │
+│ descripcion                   │
+│ tecnologias (JSON/VARCHAR)    │
+│ base_datos (VARCHAR)          │
+│ lenguaje (VARCHAR)            │
+│ precio (DECIMAL)              │
+│ fecha_creacion                │
+│ estado (ACTIVO|INACTIVO)      │
+└──────────────────────────────┘
+
+================================================================================
+5. ENDPOINTS REQUERIDOS (Resumen)
+================================================================================
+
+AUTH:
+- POST /api/auth/registro
+- POST /api/auth/login
+- POST /api/auth/logout
+- POST /api/auth/refresh-token
+
+USUARIOS:
+- GET /api/usuarios/{id}/perfil
+- PUT /api/usuarios/{id}/perfil
+- POST /api/usuarios/{id}/foto
+- GET /api/usuarios/{id}/etiquetas
+- PUT /api/usuarios/{id}/etiquetas
+- PUT /api/usuarios/{id}/seguridad/cambiar-contrasena
+
+DASHBOARD:
+- GET /api/ingeniero/dashboard/estadisticas?periodo=...
+- GET /api/cliente/dashboard/estadisticas?periodo=...
+
+CONTRATOS:
+- GET /api/contratos/mis-contratos
+- GET /api/contratos/{id}
+- POST /api/contratos
+- PUT /api/contratos/{id}
+- DELETE /api/contratos/{id}
+- POST /api/contratos/{id}/enviar-correo
+
+CHATS:
+- GET /api/chats/mis-chats
+- GET /api/chats/{chatId}/mensajes
+- POST /api/chats/{chatId}/mensaje
+- POST /api/chats/{chatId}/archivo
+- WS /chat/{userId}
+
+MARKETPLACE:
+- GET /api/publicaciones
+- GET /api/publicaciones/{id}
+- POST /api/publicaciones (ingeniero)
+- PUT /api/publicaciones/{id} (ingeniero)
+- DELETE /api/publicaciones/{id} (ingeniero)
+- GET /api/publicaciones/buscar?base=...&lenguaje=...
+
+SALDO/PAGOS:
+- GET /api/saldo/mi-saldo
+- POST /api/saldo/recargar
+- POST /api/saldo/retirar
+- POST /api/mercadopago/webhook
+- GET /api/saldo/historial
+
+CALENDARIO:
+- GET /api/calendario/eventos?mes=...&anio=...
+- GET /api/calendario/evento/{fecha}
+- POST /api/calendario/marcar-completado/{contrato_id}
+
+================================================================================
+6. TECNOLOGÍAS Y LIBRERÍAS
+================================================================================
+
+BACKEND:
+✓ Spring Boot 4.0.1
+✓ Spring Data JPA (ORM)
+✓ Spring Security (JWT)
+✓ Spring WebSocket
+✓ MySQL Driver
+✓ JWT: io.jsonwebtoken:jjwt
+
+AGREGAR A pom.xml:
+- com.mercadopago.sdk:dx-java (Mercado Pago)
+- org.springframework.boot:spring-boot-starter-mail (Email)
+- com.fasterxml.jackson: jackson-databind (JSON)
+
+FRONTEND:
+✓ React 18+
+✓ React Router
+✓ WebSocket (ws library)
+
+AGREGAR:
+- axios (HTTP client)
+- react-calendar (Calendario)
+- recharts (Gráficas)
+- ws (WebSocket client)
+- tailwindcss (Estilos - opcional pero recomendado)
+
+================================================================================
+7. PLAN DE IMPLEMENTACIÓN (PASOS)
+================================================================================
+
+FASE 1: CONFIGURACIÓN INICIAL
+✓ Paso 1: Configurar theme.config.js con colores
+✓ Paso 2: Agregar logos adaptables (blanco, gris, negro, color)
+✓ Paso 3: Actualizar pom.xml con dependencias (JWT, Mail, Jackson, WebSocket)
+✓ Paso 4: Configurar application.properties (Email service)
+
+FASE 2: MODELOS Y REPOSITORIOS
+✓ Paso 5: Crear/Actualizar enums (Role, ContractStatus, PaymentStatus, etc.)
+✓ Paso 6: Expandir modelo User (campos: saldo, apodo, descripción, fotoPerfil, cuentaMercadoPago)
+✓ Paso 7: Actualizar modelo Contract y Entrega
+✓ Paso 8: Crear modelo Publication
+✓ Paso 9: Crear repositorios correspondientes
+
+FASE 2: SERVICIOS
+✓ Paso 10: Implementar UserService
+✓ Paso 11: Implementar ContractService
+✓ Paso 12: Implementar ChatService
+✓ Paso 13: Implementar PublicationService
+✓ Paso 14: Implementar PaymentService
+✓ Paso 15: Implementar MercadoPagoService
+✓ Paso 16: Implementar EmailService
+
+FASE 3: CONTROLADORES
+[ ] Paso 17: Crear UserController
+[ ] Paso 12: Implementar ChatService
+[ ] Paso 13: Implementar PublicationService
+[ ] Paso 14: Implementar PaymentService
+[ ] Paso 15: Implementar MercadoPagoService
+[ ] Paso 16: Implementar EmailService
+
+FASE 4: CONTROLADORES
+[ ] Paso 17: Crear UserController
+[ ] Paso 18: Crear DashboardController (Ingeniero/Cliente)
+[ ] Paso 19: Crear ContractController
+[ ] Paso 20: Crear ChatController
+[ ] Paso 21: Crear PublicationController
+[ ] Paso 22: Crear PaymentController
+[ ] Paso 23: Crear CalendarController
+[ ] Paso 24: Crear MercadoPagoWebhookController
+
+FASE 5: WEBSOCKET
+[ ] Paso 25: Configurar WebSocketConfig
+[ ] Paso 26: Implementar ChatWebSocketHandler
+
+FASE 6: FRONTEND - COMPONENTES BASE
+[ ] Paso 27: Implementar Header.jsx con tema
+[ ] Paso 28: Implementar Sidebar.jsx
+[ ] Paso 29: Implementar ChatWindow.jsx
+[ ] Paso 30: Implementar PaymentButton.jsx
+[ ] Paso 31: Implementar ContractFormModal.jsx
+
+FASE 7: FRONTEND - PÁGINAS INGENIERO
+[ ] Paso 32: Implementar Dashboard.jsx (Ingeniero)
+[ ] Paso 33: Implementar Perfil.jsx (Ingeniero)
+[ ] Paso 34: Implementar Seguridad.jsx (Ingeniero)
+[ ] Paso 35: Implementar Chats.jsx (Ingeniero)
+[ ] Paso 36: Implementar Marketplace.jsx (Ingeniero)
+[ ] Paso 37: Implementar Calendario.jsx (Ingeniero)
+
+FASE 8: FRONTEND - PÁGINAS CLIENTE
+[ ] Paso 38: Implementar Dashboard.jsx (Cliente)
+[ ] Paso 39: Implementar Perfil.jsx (Cliente)
+[ ] Paso 40: Implementar Seguridad.jsx (Cliente)
+[ ] Paso 41: Implementar Chats.jsx (Cliente)
+[ ] Paso 42: Implementar Marketplace.jsx (Cliente)
+[ ] Paso 43: Implementar Calendario.jsx (Cliente)
+
+FASE 9: INTEGRACIÓN Y PRUEBAS
+[ ] Paso 44: Pruebas de autenticación
+[ ] Paso 45: Pruebas de WebSocket
+[ ] Paso 46: Pruebas de Mercado Pago
+[ ] Paso 47: Pruebas de Email
+[ ] Paso 48: Pruebas completas del sistema
+
+================================================================================
+8. NOTAS IMPORTANTES
+================================================================================
+
+✓ NO crear archivos README innecesarios
+✓ NO crear controladores hasta que se ejecute paso a paso
+✓ Cada funcionalidad completada se documenta en este archivo
+✓ Los cambios en BD solo en Script_Ez.sql
+✓ Mercado Pago: Usa las credenciales en application.properties
+✓ WebSocket: Usa ws://localhost:8080/chat
+✓ Emails: Configurar servidor SMTP (puede ser Gmail, SendGrid, etc.)
+✓ Autenticación: Mantener JWT en lugar de sesiones
+✓ Seguridad: Verificar contraseña antigua antes de cambiar
+✓ Archivos adjuntos: Guardar en carpeta /uploads o cloud storage
+✓ Imágenes de perfil: Base64 o URL a cloud storage
+
+================================================================================
+9. BASE DE DATOS - ESTADO DE SEGUIMIENTO
+================================================================================
+
+ESTADO ACTUAL:
+- ✓ Tabla users_ez existe
+- ✓ Tabla contratos_ez existe
+- ✓ Tabla entrega_ez existe
+- ✓ Tabla pagos_ez existe
+- ✓ Se requiere verificar campos adicionales
+
+CAMBIOS NECESARIOS:
+- [ ] Agregar campos: saldo, cuenta_mercadopago, apodo, descripcion
+- [ ] Crear tabla: etiquetas_usuario
+- [ ] Crear tabla: chats_ez
+- [ ] Crear tabla: mensajes_chat
+- [ ] Crear tabla: publicaciones_ez
+- [ ] Agregar índices para búsquedas rápidas
+
+================================================================================
+10. SEGUIMIENTO DE PROGRESO
+================================================================================
+
+INICIO: Marzo 2025
+FASE 1: _________________________ [0%]
+FASE 2: _________________________ [0%]
+FASE 3: _________________________ [0%]
+FASE 4: _________________________ [0%]
+FASE 5: _________________________ [0%]
+FASE 6: _________________________ [0%]
+FASE 7: _________________________ [0%]
+FASE 8: _________________________ [0%]
+FASE 9: _________________________ [0%]
+
+PROGRESO GENERAL: _____________ [0%]
+
+================================================================================
