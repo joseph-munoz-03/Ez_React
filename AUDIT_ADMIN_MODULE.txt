@@ -1,0 +1,391 @@
+================================================================================
+                 AUDITORÍA - MÓDULO ADMINISTRADOR EZ
+                Plan de Verificación y Corrección por Fases
+================================================================================
+
+ESTADO INICIAL:
+✓ Todas las carpetas creadas (10 directorios)
+✓ 7 Controladores implementados
+✓ 8 Servicios implementados
+✓ 6 DTOs y modelos creados
+✓ 7 Páginas React completadas
+✓ SecurityConfig actualizado
+✓ Email services integrados
+
+PROBLEMAS IDENTIFICADOS:
+⚠ AdminChatService.getChatMessages() - Usa método incorrecto del repositorio
+⚠ AdminDashboardService - Gráficas retornan datos vacíos (placeholder)
+⚠ React admin pages - Estilos inline, no usan theme.config.js
+⚠ Dashboard statistics - Algunos cálculos no implementados
+
+================================================================================
+FASE 1: CORRECCIÓN DE MÉTODOS DE REPOSITORIO
+================================================================================
+
+Tiempo Estimado: 15 minutos
+Prioridad: CRÍTICA
+Descripción: Corregir llamadas a métodos que no existen en repositories
+
+TAREA 1.1: Verificar ChatMessageRepository
+Ubicación: Ez_back/src/main/java/com/example/ez/repository/chat/
+Métodos Correctos:
+  ✓ findByChatIdChat(Long chatId)
+  ✓ findByChatIdChatOrderByFechaCreacionAsc(Long chatId)
+Métodos Incorrectos (a EVITAR):
+  ✗ findByChatId(Long chatId) ← CAUSA DEL ERROR
+
+ARCHIVO A CORREGIR:
+╔════════════════════════════════════════════════════════════════════════════╗
+║ AdminChatService.java (Línea 30)                                           ║
+╠════════════════════════════════════════════════════════════════════════════╣
+║ ANTES:                                                                      ║
+║   public List<ChatMessage> getChatMessages(Long chatId) {                   ║
+║       return chatMessageRepository.findByChatId(chatId);  ✗ INCORRECTO     ║
+║   }                                                                         ║
+║                                                                             ║
+║ DESPUÉS:                                                                    ║
+║   public List<ChatMessage> getChatMessages(Long chatId) {                   ║
+║       return chatMessageRepository.findByChatIdChatOrderByFechaCreacionAsc( ║
+║           chatId                                                           ║
+║       );  ✓ CORRECTO                                                       ║
+║   }                                                                         ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+TAREA 1.2: Verificar métodos de UserRepository
+Ubicación: Ez_back/src/main/java/com/example/ez/repository/user/
+Métodos Utilizados:
+  ✓ findAllByRole(Role role) ← En AdminEmailService (VERIFICAR EXISTENCIA)
+  ✓ countByRole(Role role) ← En AdminDashboardService (VERIFICAR EXISTENCIA)
+  ✓ findAll() ← Heredado de JpaRepository
+
+Acción: Si no existen, agregar:
+  @Query("SELECT u FROM User u WHERE u.role = :role")
+  List<User> findAllByRole(@Param("role") Role role);
+  
+  long countByRole(Role role);
+
+TAREA 1.3: Verificar ReportRepository
+Ubicación: Ez_back/src/main/java/com/example/ez/repository/report/
+Métodos Necesarios:
+  ✓ findByStatus(ReportStatus status) ← Para filtrado
+  ✓ countByStatus(ReportStatus status) ← Para estadísticas
+  ✓ findAll() ← Para listado general
+
+================================================================================
+FASE 2: IMPLEMENTACIÓN DE ESTADÍSTICAS DASHBOARD
+================================================================================
+
+Tiempo Estimado: 30 minutos
+Prioridad: ALTA
+Descripción: Reemplazar datos placeholder con consultas reales a BD
+
+ARCHIVO A ACTUALIZAR: AdminDashboardService.java
+
+TAREA 2.1: Implementar generateWeeklySalesChart()
+Objetivo: Agregar ventas por día de la semana (últimos 7 días)
+Lógica:
+  1. Obtener contratos del último mes
+  2. Agrupar por día de semana
+  3. Sumar montos pagados (Payment.monto)
+  4. Retornar BarChartDTO con day y totalSales
+
+Método A Agregar:
+╔════════════════════════════════════════════════════════════════════════════╗
+║ private List<BarChartDTO> generateWeeklySalesChart() {                     ║
+║     List<BarChartDTO> chart = new ArrayList<>();                           ║
+║     LocalDateTime weekAgo = LocalDateTime.now().minusDays(7);              ║
+║                                                                             ║
+║     // Obtener contratos con pagos de la última semana                     ║
+║     List<Contract> weekContracts = contractRepository                      ║
+║         .findByCreatedAtGreaterThanEqual(weekAgo);                         ║
+║                                                                             ║
+║     // Agrupar y sumar por día                                             ║
+║     Map<LocalDate, BigDecimal> salesByDay = new HashMap<>();               ║
+║     ... (implementar agrupación)                                           ║
+║                                                                             ║
+║     String[] days = {"Lunes", "Martes", "Miércoles", ...};                 ║
+║     for (int i = 0; i < 7; i++) {                                         ║
+║         BarChartDTO bar = new BarChartDTO();                               ║
+║         bar.setDay(days[i]);                                               ║
+║         bar.setTotalSales(salesByDay.getOrDefault(...)                     ║
+║         chart.add(bar);                                                    ║
+║     }                                                                       ║
+║     return chart;                                                          ║
+║ }                                                                           ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+TAREA 2.2: Implementar generateWeeklyReportsChart()
+Objetivo: Contar reportes por día de la semana
+Lógica:
+  1. Obtener reportes del último mes
+  2. Agrupar por día de semana
+  3. Contar cantidad de reportes por día
+  4. Retornar BarChartDTO con day y totalReports
+
+TAREA 2.3: Implementar generateUserTypeChart()
+Objetivo: Contar usuarios por tipo (CLIENTE, INGENIERO, ADMIN, INACTIVOS)
+Lógica:
+  1. Contar usuarios con role CLIENTE
+  2. Contar usuarios con role INGENIERO
+  3. Contar usuarios con role ADMIN
+  4. Contar usuarios inactivos (últimos 30 días sin login)
+  5. Retornar lista PieChartDTO
+
+TAREA 2.4: Implementar getRecentActivities()
+Objetivo: Obtener últimas 10 acciones del sistema
+Lógica:
+  1. Contratos creados (últimas 5)
+  2. Reportes abiertos (últimas 3)
+  3. Publicaciones nuevas (últimas 2)
+Retorna: RecentActivityDTO con tipo, descripción, usuario, timestamp
+
+TAREA 2.5: Implementar getRecentSales()
+Objetivo: Obtener últimas 10 ventas completadas
+Lógica:
+  1. Obtener contratos con estado COMPLETADO
+  2. Ordenar por fecha descente
+  3. Limitar a 10
+Retorna: RecentSalesDTO con contractId, title, engineerName, clientName, amount
+
+================================================================================
+FASE 3: INTEGRACIÓN DE TEMAS EN COMPONENTES REACT
+================================================================================
+
+Tiempo Estimado: 45 minutos
+Prioridad: MEDIA (Visual/UX)
+Descripción: Reemplazar estilos inline con variables de theme.config.js
+
+ARCHIVOS A ACTUALIZAR: 7 páginas admin en src/pages/admin/
+
+Estilos A Aplicar:
+╔════════════════════════════════════════════════════════════════════════════╗
+║ COLORES DEL TEMA (desde theme.config.js):                                  ║
+║                                                                             ║
+║ Primarios:                                                                  ║
+║   theme.colors.primary.blanco = #FFFFFF                                    ║
+║   theme.colors.primary.negro = #1F2937                                     ║
+║   theme.colors.primary.gris = #6B7280                                      ║
+║                                                                             ║
+║ Acentos:                                                                    ║
+║   theme.colors.accent.verde = #10B981                                      ║
+║   theme.colors.accent.morado = #A855F7                                     ║
+║   theme.colors.accent.azul = #3B82F6                                       ║
+║   theme.colors.accent.rojo = #EF4444                                       ║
+║                                                                             ║
+║ Espaciado:                                                                  ║
+║   theme.spacing.sm = 8px                                                   ║
+║   theme.spacing.md = 16px                                                  ║
+║   theme.spacing.lg = 24px                                                  ║
+║   theme.spacing.xl = 32px                                                  ║
+║                                                                             ║
+║ Bordes:                                                                     ║
+║   theme.borderRadius.sm = 4px                                              ║
+║   theme.borderRadius.md = 8px                                              ║
+║   theme.borderRadius.lg = 12px                                             ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+TAREA 3.1: AdminDashboard.jsx
+Cambios:
+  □ Importar theme desde theme.config
+  □ Reemplazar colores hardcodeados con theme.colors.*
+  □ Cards: background blanco, bordes gris suave
+  □ Títulos: color negro, peso 600 (semibold)
+  □ Números: color azul (accent), tamaño grande
+  □ Botones: color verde (hover)
+
+TAREA 3.2: AdminUsers.jsx
+Cambios:
+  □ Tabla: alternancia blanco/gris suave
+  □ Headers: fondo gris oscuro, texto blanco
+  □ Botones editar: azul
+  □ Botones eliminar: rojo
+  □ Botones ban: naranja/
+  □ Inputs: borde gris, focus azul
+
+TAREA 3.3: AdminChats.jsx
+Cambios:
+  □ Sidebar: fondo gris muy claro
+  □ Mensajes propios: fondo azul, texto blanco
+  □ Mensajes ajenos: fondo gris, texto negro
+  □ Timestamps: gris secundario, tamaño pequeño
+
+TAREA 3.4: AdminMarketplace.jsx
+Cambios:
+  □ Cards: borde gris suave
+  □ Tags (baseDatos, lenguaje): fondo azul claro, texto azul oscuro
+  □ Botón eliminar: rojo con hover más oscuro
+
+TAREA 3.5: AdminContracts.jsx
+Cambios:
+  □ Status badge: colores según estado
+  □ Tabla entregas: alternancia filas
+  □ Buttons: estilo consistente con AdminUsers
+
+TAREA 3.6: AdminEmails.jsx
+Cambios:
+  □ Editor: borde gris, fondo blanco
+  □ Botones variables: azul con hover gris
+  □ Botones template: morado
+  □ Selector rol/usuario: azul
+
+TAREA 3.7: AdminReports.jsx
+Cambios:
+  □ Status colores: 
+    - OPEN: rojo (#EF4444)
+    - REVIEWING: naranja (#F59E0B)
+    - RESOLVED: verde (#10B981)
+    - REJECTED: gris (#6B7280)
+  □ Cards: borde según status
+
+================================================================================
+FASE 4: VERIFICACIÓN DE DEPENDENCIAS
+================================================================================
+
+Tiempo Estimado: 20 minutos
+Prioridad: CRÍTICA
+Descripción: Asegurar que todos los servicios y repositorios existan
+
+TAREA 4.1: Verificar EmailService.java
+Ubicación: Ez_back/src/main/java/com/example/ez/service/email/
+Métodos Requeridos:
+  ✓ sendSimpleEmail(String to, String subject, String message)
+  → Usado por: AdminEmailService, AuthService
+
+Si NO existe: CREAR con estructura básica
+╔════════════════════════════════════════════════════════════════════════════╗
+║ @Service                                                                    ║
+║ public class EmailService {                                                ║
+║     public void sendSimpleEmail(String to, String subject, String msg)      ║
+║         throws MessagingException {                                        ║
+║         // Implementar con JavaMailSender                                   ║
+║     }                                                                       ║
+║ }                                                                           ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+TAREA 4.2: Verificar ReportRepository.java
+Ubicación: Ez_back/src/main/java/com/example/ez/repository/report/
+Estado: PROBABLEMENTE EXISTE (creado en etapas anteriores)
+Métodos A Verificar:
+  ✓ count()
+  ✓ countByStatus(ReportStatus)
+  ✓ findByStatus(ReportStatus)
+
+TAREA 4.3: Verificar UserRepository.java
+Métodos A Verificar:
+  ✓ findAllByRole(Role) ← CRÍTICO
+  ✓ countByRole(Role) ← CRÍTICO
+  ✓ findAll()
+
+TAREA 4.4: Verificar ContractRepository.java
+Métodos A Verificar:
+  ✓ count()
+  ✓ findByStatus(String)
+  ✓ findAllByCreatedAtBetween() ← Para estadísticas
+
+================================================================================
+FASE 5: TESTING Y VALIDACIÓN
+================================================================================
+
+Tiempo Estimado: 30 minutos
+Prioridad: MEDIA
+Descripción: Pruebas manuales e integración end-to-end
+
+TAREA 5.1: Compilación Backend
+Comando: ./mvnw clean compile
+Resultado esperado: BUILD SUCCESS
+Errores a buscar:
+  ✗ Method findByChatId not found
+  ✗ Method findAllByRole not found
+  ✗ Method countByRole not found
+
+TAREA 5.2: Testing Endpoints Admin
+Endpoints a validar:
+  ✓ GET /admin/dashboard → Debe retornar estadísticas con gráficas no vacías
+  ✓ GET /admin/chats → Debe retornar lista paginada
+  ✓ GET /admin/chats/{id}/messages → Debe retornar mensajes ordenados
+  ✓ GET /admin/users → Debe retornar lista paginada
+  ✓ PUT /admin/users/{id} → Debe actualizar sin modificar campos protegidos
+  ✓ PUT /admin/reports/{id}/resolve → Debe cambiar estado a RESOLVED
+
+TAREA 5.3: Testing Frontend React
+Pasos:
+  1. npm start en Ez_front
+  2. Login como admin
+  3. Navegar a /admin
+  4. Verificar:
+    ✓ Dashboard carga sin errores
+    ✓ Charts muestran datos reales
+    ✓ Estilos coinciden con theme.config.js
+    ✓ Responsive en móvil
+
+TAREA 5.4: Pruebas de Integración
+Casos a validar:
+  □ Crear usuario + Email notificación
+  □ Eliminar publicación + Email al autor
+  □ Crear reporte + Dashboard actualiza
+  □ Enviar email masivo + Variables sustituidas
+
+================================================================================
+RESUMEN DE CAMBIOS
+================================================================================
+
+ARCHIVOS A MODIFICAR: 15
+  Backend (8 archivos):
+    1. AdminChatService.java ← Corregir método repositorio
+    2. AdminDashboardService.java ← Implementar gráficas reales
+    3. UserRepository.java ← Agregar métodos si faltan
+    4. ContractRepository.java ← Verificar métodos
+    5. ReportRepository.java ← Verificar métodos
+    6. ChatMessageRepository.java ← Verificar existe
+    7. EmailService.java ← Verificar/Crear
+    8. SecurityConfig.java ← Verificar /admin/** roles
+
+  Frontend (7 archivos):
+    1. AdminDashboard.jsx ← Integrar theme
+    2. AdminUsers.jsx ← Integrar theme
+    3. AdminChats.jsx ← Integrar theme
+    4. AdminMarketplace.jsx ← Integrar theme
+    5. AdminContracts.jsx ← Integrar theme
+    6. AdminEmails.jsx ← Integrar theme
+    7. AdminReports.jsx ← Integrar theme
+
+LÍNEAS CODE A CAMBIAR: ~150-200
+TIEMPO TOTAL ESTIMADO: 2.5 horas
+COMPLEJIDAD: MEDIA (sin refactorización mayor)
+
+================================================================================
+CRITERIOS DE ACEPTACIÓN
+================================================================================
+
+Backend:
+  ✓ No hay errores de compilación
+  ✓ Todos los métodos M:N se resuelven correctamente
+  ✓ Dashboard retorna datos reales, no vacíos
+  ✓ Email service funciona en múltiples escenarios
+  ✓ SecurityConfig valida /admin/** correctamente
+
+Frontend:
+  ✓ Todos los componentes usan theme.config.js
+  ✓ Colores coinciden con PLANNING.txt
+  ✓ Responsive en dispositivos móviles
+  ✓ No hay console errors
+  ✓ Datos se cargan sin delays excesivos
+
+General:
+  ✓ Cumple con estándares de PLANNING.txt
+  ✓ No duplica funcionalidad existente
+  ✓ Sigue patrones arquitectónicos del proyecto
+  ✓ Documentación comentada en código
+
+================================================================================
+PRÓXIMOS PASOS
+================================================================================
+
+1. ✓ Ejecutar Fase 1 (Corrección de repositorios)
+2. ✓ Ejecutar Fase 2 (Implementar estadísticas)
+3. ✓ Ejecutar Fase 3 (Integrar temas React)
+4. ✓ Ejecutar Fase 4 (Verificar dependencias)
+5. ✓ Ejecutar Fase 5 (Testing)
+6. ✓ Generar reporte final de auditoría
+
+================================================================================

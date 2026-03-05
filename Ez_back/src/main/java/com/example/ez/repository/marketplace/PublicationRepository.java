@@ -20,4 +20,9 @@ public interface PublicationRepository extends JpaRepository<Publication, Long> 
     
     @Query("SELECT p FROM Publication p WHERE p.usuario.idUsers = :usuarioId AND p.estado = 'ACTIVO'")
     List<Publication> findByUsuarioId(@Param("usuarioId") Long usuarioId);
+    
+    /**
+     * Últimas 2 publicaciones ordenadas por fecha de creación (descendente)
+     */
+    List<Publication> findTop2ByOrderByCreatedAtDesc();
 }

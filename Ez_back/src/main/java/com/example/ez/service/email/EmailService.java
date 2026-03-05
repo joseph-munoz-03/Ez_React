@@ -239,4 +239,31 @@ public class EmailService {
             log.error("Error al enviar recuperación de contraseña", e);
         }
     }
+
+    /**
+     * Enviar correo simple (genérico)
+     * Utilizado para correos administrativos y masivos
+     */
+    public void sendSimpleEmail(String to, String subject, String message) throws MessagingException {
+        try {
+            MimeMessage mailMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mailMessage, true, "UTF-8");
+
+            try {
+                helper.setFrom(fromEmail, fromName);
+            } catch (UnsupportedEncodingException e) {
+                helper.setFrom(fromEmail);
+            }
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(message, false);
+
+            mailSender.send(mailMessage);
+            log.info("Correo simple enviado a: {}", to);
+
+        } catch (MessagingException e) {
+            log.error("Error al enviar correo simple a {}: {}", to, e.getMessage());
+            throw e;
+        }
+    }
 }

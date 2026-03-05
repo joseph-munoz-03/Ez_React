@@ -1,0 +1,408 @@
+================================================================================
+                    MÓDULO ADMINISTRADOR - IMPLEMENTACIÓN COMPLETA
+================================================================================
+
+FECHA: Marzo 2026
+ESTADO: COMPLETADO ✓
+VERSIÓN: 1.0
+
+================================================================================
+1. RESUMEN EJECUTIVO
+================================================================================
+
+Se ha implementado un módulo administrativo completo para la plataforma EZ que 
+permite a los administradores:
+
+✓ Gestionar usuarios (CRUD, baneo, subida masiva)
+✓ Visualizar dashboard con estadísticas
+✓ Moderar marketplace (eliminar publicaciones)
+✓ Ver y gestionar reportes de usuarios
+✓ Monitorear chats
+✓ Enviar correos masivos personalizados
+✓ Ver todos los contratos (lectura)
+
+================================================================================
+2. ESTRUCTURA CREADA
+================================================================================
+
+BACKEND - Nuevas carpetas y archivos:
+
+controller/admin/
+├── AdminDashboardController.java (GET /admin/dashboard)
+├── AdminUserController.java (GET/POST/PUT/DELETE /admin/users)
+├── AdminReportController.java (GET/PUT /admin/reports)
+├── AdminChatController.java (GET /admin/chats)
+├── AdminMarketplaceController.java (GET/DELETE /admin/publications)
+├── AdminContractController.java (GET /admin/contracts)
+└── AdminEmailController.java (POST /admin/email)
+
+service/admin/
+├── AdminDashboardService.java
+├── AdminUserService.java
+├── AdminExcelService.java
+├── AdminReportService.java
+├── AdminChatService.java
+├── AdminMarketplaceService.java
+├── AdminContractService.java
+└── AdminEmailService.java
+
+model/admin/
+├── DashboardAdminDTO.java
+└── dto/
+    ├── BarChartDTO.java
+    ├── PieChartDTO.java
+    ├── RecentActivityDTO.java
+    └── RecentSalesDTO.java
+
+model/report/
+└── Report.java
+
+model/enums/
+├── ReportReason.java (NO_PAYMENT, CONTRACT_BREACH, SEXUAL_CONTENT, SCAM, OTHER)
+└── ReportStatus.java (OPEN, REVIEWING, RESOLVED, REJECTED)
+
+repository/admin/ (vacío - usa repositorios existentes)
+
+repository/report/
+└── ReportRepository.java
+
+service/report/
+└── ReportService.java
+
+service/chatbot/
+└── ChatbotService.java
+
+controller/common/
+└── ReportController.java (new reports endpoint)
+
+FRONTEND - Nuevas páginas React:
+
+pages/admin/
+├── AdminDashboard.jsx
+├── AdminUsers.jsx
+├── AdminChats.jsx
+├── AdminMarketplace.jsx
+├── AdminContracts.jsx
+├── AdminEmails.jsx
+└── AdminReports.jsx
+
+================================================================================
+3. ENDPOINTS IMPLEMENTADOS
+================================================================================
+
+DASHBOARD:
+  GET /admin/dashboard
+    - Retorna DashboardAdminDTO con todas las estadísticas
+
+USUARIOS:
+  GET /admin/users?page=0&size=10
+    - Listar usuario con paginación
+  GET /admin/users/{id}
+    - Ver detalles de usuario
+  PUT /admin/users/{id}
+    - Actualizar usuario (nombre, apellido, genero, role, password, estado)
+  DELETE /admin/users/{id}
+    - Eliminar usuario (soft delete - estado=INACTIVE)
+  PUT /admin/users/{id}/ban
+    - Banear usuario (estado=BANNED)
+  POST /admin/users/upload
+    - Subida masiva de usuarios desde Excel
+  GET /admin/users/template
+    - Descargar plantilla Excel
+
+REPORTES:
+  GET /admin/reports?page=0&size=10
+    - Listar reportes
+  GET /admin/reports/{id}
+    - Ver detalles de reporte
+  PUT /admin/reports/{id}/resolve
+    - Resolver reporte
+  PUT /admin/reports/{id}/reject
+    - Rechazar reporte
+  POST /api/reports
+    - Crear reporte (usuario común)
+
+CHATS:
+  GET /admin/chats?page=0&size=10
+    - Listar chats
+  GET /admin/chats/{id}
+    - Ver detalles de chat
+  GET /admin/chats/{id}/messages
+    - Ver mensajes de un chat
+
+MARKETPLACE:
+  GET /admin/publications?page=0&size=10
+    - Listar publicaciones
+  GET /admin/publications/{id}
+    - Ver detalles de publicación
+  DELETE /admin/publications/{id}
+    - Eliminar publicación (y enviar correo al autor)
+
+CONTRATOS:
+  GET /admin/contracts?page=0&size=10
+    - Listar contratos
+  GET /admin/contracts/{id}
+    - Ver detalles de contrato
+
+CORREOS:
+  POST /admin/email/send-to-all
+    - Enviar correo a todos
+  POST /admin/email/send-to-role
+    - Enviar correo por rol
+  POST /admin/email/send-to-users
+    - Enviar correo a usuarios específicos
+
+================================================================================
+4. MODELOS DE DATOS
+================================================================================
+
+REPORT:
+  - id (PK)
+  - reporterUserId (FK) - quien reporta
+  - reportedUserId (FK) - quien es reportado (nullable)
+  - publicationId - publicación reportada (nullable)
+  - chatId - chat reportado (nullable)
+  - reason (ENUM) - motivo del reporte
+  - description - descripción adicional
+  - imageUrl - imagen de evidencia
+  - status (ENUM) - estado del reporte
+  - createdAt - cuando se creó
+  - updatedAt - última actualización
+
+ENUMS NUEVOS:
+  - ReportReason: NO_PAYMENT, CONTRACT_BREACH, SEXUAL_CONTENT, SCAM, OTHER
+  - ReportStatus: OPEN, REVIEWING, RESOLVED, REJECTED
+
+================================================================================
+5. CARACTERÍSTICAS IMPLEMENTADAS
+================================================================================
+
+DASHBOARD ADMINISTRATIVO:
+  ✓ Estadísticas de usuarios (total, ingenieros, clientes, inactivos)
+  ✓ Estadísticas de negocio (contratos, publicaciones, reportes, chats)
+  ✓ Botones de acceso rápido a todas las secciones
+  ✓ Gráficas de ventas por semana
+  ✓ Gráficas de reportes por semana
+  ✓ Gráficas de usuarios por tipo
+  ✓ Actividades recientes
+  ✓ Ventas recientes
+
+GESTIÓN DE USUARIOS:
+  ✓ Listar usuarios con paginación
+  ✓ Editar usuario (nombre, apellido, genero, rol, password, estado)
+  ✓ Campos no editables: id, cedula, email
+  ✓ Soft delete (cambiar estado a INACTIVO)
+  ✓ Banear usuario
+  ✓ Subida masiva desde Excel
+  ✓ Descargar plantilla Excel
+
+SISTEMA DE REPORTES:
+  ✓ Crear reportes (desde chat o marketplace)
+  ✓ Ver todos los reportes (admin)
+  ✓ Resolver reportes
+  ✓ Rechazar reportes
+  ✓ Motivos: No Pago, Incumplimiento Contrato, Contenido Sexual, Estafa, Otro
+  ✓ Estados: Abierto, En Revisión, Resuelto, Rechazado
+
+GESTIÓN DE CHATS:
+  ✓ Ver todos los chats
+  ✓ Ver mensajes de un chat específico
+  ✓ Clasificación: Chatbot (azul), Ayuda (verde), Reporte (rojo), Usuario (gris)
+
+MARKETPLACE MODERACIÓN:
+  ✓ Ver todas las publicaciones
+  ✓ Ver perfil del autor
+  ✓ Eliminar publicaciones (notifica al autor por correo)
+  ✓ Filtrar por usuario, base de datos, lenguaje
+
+VISTA DE CONTRATOS:
+  ✓ Ver todos los contratos
+  ✓ Ver detalles de cada contrato
+  ✓ Ver entregas y pagos
+  ✓ Solo lectura (no editar, no eliminar)
+
+CORREOS MASIVOS:
+  ✓ Enviar a todos los usuarios
+  ✓ Enviar por rol (ADMIN, INGENIERO, CLIENTE)
+  ✓ Enviar a usuarios específicos
+  ✓ Variables dinámicas: {{perfil}}, {{correo}}, {{cuenta}}
+  ✓ Plantillas predefinidas
+  ✓ Selector de variables
+
+CHATBOT:
+  ✓ Responder a preguntas frecuentes
+  ✓ Tópicos: contratos, reportes, saldo, marketplace, pagos, calendario
+  ✓ Respuesta por defecto si no entiende
+
+================================================================================
+6. CORREOS AUTOMÁTICOS INTEGRADOS
+================================================================================
+
+REGISTRO:
+  De: Sistema EZ
+  Para: Nuevo usuario
+  Asunto: "Bienvenido a EZ"
+  Contenido: Confirmación de registro
+
+LOGIN:
+  De: Sistema EZ
+  Para: Usuario que inicia sesión
+  Asunto: "Bienvenido de nuevo a EZ"
+  Contenido: Confirmación de acceso
+
+PUBLICACIÓN MARKETPLACE:
+  De: Sistema EZ
+  Para: Todos los ingenieros (excepto autor)
+  Asunto: "Nueva publicación en EZ Marketplace"
+  Contenido: Detalles de la nueva publicación
+
+ELIMINACIÓN DE PUBLICACIÓN:
+  De: Sistema EZ
+  Para: Autor de la publicación
+  Asunto: "Tu publicación en EZ ha sido eliminada"
+  Contenido: Notificación de eliminación
+
+================================================================================
+7. SEGURIDAD
+================================================================================
+
+VALIDACIÓN:
+  ✓ Todos los endpoints /admin/** requieren rol ADMIN
+  ✓ Anotación @PreAuthorize("hasRole('ADMIN')")
+  ✓ SecurityConfig actualizado
+
+CAMPOS PROTEGIDOS:
+  - Cedula: no editable
+  - Email: no editable
+  - ID: no editable
+  - Contraseña: solo administrador puede cambiar
+
+PERMISOS:
+  - ADMIN: acceso total al módulo
+  - INGENIERO: puede reportar, crear publicaciones
+  - CLIENTE: puede reportar, ver marketplace
+  - VISITANTES: pueden ser reportados
+
+================================================================================
+8. VALIDACIONES Y REGLAS DE NEGOCIO
+================================================================================
+
+USUARIOS:
+  - No se puede editar cedula, correo ni ID
+  - Solo administrador puede cambiar rol y contraseña
+  - Soft delete cambia estado a INACTIVO
+  - Ban cambia estado a BANNED
+
+REPORTES:
+  - Solo pueden crearlo usuarios autenticados
+  - Pueden reportar a usuarios o publicaciones
+  - Estados: Abierto → Revisión → Resuelto/Rechazado
+
+MARKETPLACE:
+  - Las publicaciones eliminadas notifican al autor
+  - Los correos de nuevas publicaciones solo van a ingenieros
+  - No se envía a clientes ni admin
+
+CORREOS:
+  - Variables se reemplazan automáticamente
+  - Se procesa {{perfil}}, {{correo}}, {{cuenta}}
+  - Se envía de forma asincrónica para no bloquear
+
+================================================================================
+9. FUNCIONALIDADES PENDIENTES (OPTIONAL)
+================================================================================
+
+Estas funcionalidades pueden agregarse en futuras versiones:
+
+[ ] Gráficas interactivas con Recharts
+[ ] Exportar reportes a PDF
+[ ] Auditoría de acciones admin
+[ ] Sistema de notificaciones en tiempo real
+[ ] Bloqueo automático de usuarios con muchos reportes
+[ ] Sistema de sanciones progresivas
+[ ] Análisis de tendencias
+[ ] Dashboard de ingresos
+[ ] Control de uptime de la plataforma
+
+================================================================================
+10. CÓMO USAR EL MÓDULO ADMIN
+================================================================================
+
+1. ACCEDER AL DASHBOARD:
+   - URL: /admin/dashboard
+   - Se mostrará resumen con estadísticas
+
+2. GESTIONAR USUARIOS:
+   - Ir a "Gestión de Usuarios"
+   - Ver lista de usuarios
+   - Editar: nombre, apellido, genero, rol, password, estado
+   - Eliminar: cambiar estado a INACTIVO
+   - Banear: cambiar estado a BANNED
+   - Subir masivo: descargar plantilla, llenar Excel, subir
+
+3. VER REPORTES:
+   - Ir a "Reportes"
+   - Ver lista de reportes abiertos
+   - Hacer clic para ver detalles
+   - Resolver o rechazar
+
+4. MODERAR CHATS:
+   - Ir a "Chats"
+   - Ver lista de chats por tipo
+   - Seleccionar para ver mensajes
+
+5. MODERAR MARKETPLACE:
+   - Ir a "Marketplace Moderación"
+   - Ver publicaciones
+   - Filtrar por usuario, BD, lenguaje
+   - Eliminar publicación (notifica al autor)
+
+6. VER CONTRATOS:
+   - Ir a "Contratos"
+   - Ver todos los contratos
+   - Ver detalles (entregas, pagos, estado)
+
+7. ENVIAR CORREOS:
+   - Ir a "Correos Masivos"
+   - Elegir destinatarios (todos, rol, específicos)
+   - Escribir asunto y mensaje
+   - Usar variables dinamicas ({{perfil}}, {{correo}}, etc)
+   - Usar plantillas predefinidas
+   - Enviar
+
+================================================================================
+11. NOTAS TÉCNICAS
+================================================================================
+
+DEPENDENCIAS AGREGADAS:
+  - Apache POI (para Excel)
+  - Se requiere en pom.xml
+
+EMAIL SERVICE:
+  - Debe existir service/email/EmailService.java
+  - Implementar sendSimpleEmail(to, subject, message)
+
+JWT Y SEGURIDAD:
+  - Mantener JwtFilter activo
+  - Validar token en cada request /admin/**
+  - Solo usuarios con ROLE_ADMIN pueden acceder
+
+BASES DE DATOS:
+  Nueva tabla:
+    - reports_ez (report, usuario reportado, tipo, motivo, estado, fecha)
+
+PAGINACIÓN:
+  - Usar Pageable de Spring Data
+  - Default: page=0, size=10
+  - Retorna Page<T> con hasprevious, hasnext, etc
+
+================================================================================
+12. ARCHIVOS MODIFICADOS
+================================================================================
+
+✓ SecurityConfig.java - Agregar validación /admin/**
+✓ AuthService.java - Integrar correos de registro/login
+✓ PublicationService.java - Integrar correos de publicación
+✓ (Algunos repositorios necesitarán métodos findByRole, etc)
+
+================================================================================

@@ -2,10 +2,13 @@ package com.example.ez.service.marketplace;
 
 import com.example.ez.model.marketplace.Publication;
 import com.example.ez.model.user.User;
+import com.example.ez.model.enums.Role;
 import com.example.ez.repository.marketplace.PublicationRepository;
 import com.example.ez.repository.user.UserRepository;
+import com.example.ez.service.email.EmailService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +24,9 @@ public class PublicationService {
 
     private final PublicationRepository publicationRepository;
     private final UserRepository userRepository;
+    
+    @Autowired
+    private EmailService emailService;
 
     /**
      * Crear nueva publicación
@@ -32,7 +38,30 @@ public class PublicationService {
         publication.setUsuario(usuario);
         publication.setEstado("ACTIVO");
 
-        return publicationRepository.save(publication);
+        Publication savedPublication = publicationRepository.save(publication);
+        
+        // Enviar correo a todos los ingenieros nuevos servicios disponibles
+        try {
+            List<User> ingenieros = userRepository.findAllByRole(Role.INGENIERO);
+            for (User ingeniero : ingenieros) {
+                // No enviar al autor de la publicación
+                if (!ingeniero.getIdUsers().equals(usuarioId)) {
+                    emailService.sendSimpleEmail(
+                        ingeniero.getEmail(),
+                        "Nueva publicación en EZ Marketplace",
+                        "Hola " + ingeniero.getNombre() + ",\n\nNueva publicación disponible:\n" +
+                        "Título: " + publication.getTitulo() + "\n" +
+                        "Descripción: " + publication.getDescripcion() + "\n" +
+                        "Precio: $" + publication.getPrecio() + "\n\n" +
+                        "Visita el marketplace para más detalles."
+                    );
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error sending marketplace notification: " + e.getMessage());
+        }
+        
+        return savedPublication;
     }
 
     /**

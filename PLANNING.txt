@@ -567,20 +567,20 @@ FASE 6: FRONTEND - COMPONENTES BASE
 [✓] Paso 31: Implementar ContractFormModal.jsx
 
 FASE 7: FRONTEND - PÁGINAS INGENIERO
-[ ] Paso 32: Implementar Dashboard.jsx (Ingeniero)
-[ ] Paso 33: Implementar Perfil.jsx (Ingeniero)
-[ ] Paso 34: Implementar Seguridad.jsx (Ingeniero)
-[ ] Paso 35: Implementar Chats.jsx (Ingeniero)
-[ ] Paso 36: Implementar Marketplace.jsx (Ingeniero)
-[ ] Paso 37: Implementar Calendario.jsx (Ingeniero)
+[✓] Paso 32: Implementar Dashboard.jsx (Ingeniero)
+[✓] Paso 33: Implementar Perfil.jsx (Ingeniero)
+[✓] Paso 34: Implementar Seguridad.jsx (Ingeniero)
+[✓] Paso 35: Implementar Chats.jsx (Ingeniero)
+[✓] Paso 36: Implementar Marketplace.jsx (Ingeniero)
+[✓] Paso 37: Implementar Calendario.jsx (Ingeniero)
 
 FASE 8: FRONTEND - PÁGINAS CLIENTE
-[ ] Paso 38: Implementar Dashboard.jsx (Cliente)
-[ ] Paso 39: Implementar Perfil.jsx (Cliente)
-[ ] Paso 40: Implementar Seguridad.jsx (Cliente)
-[ ] Paso 41: Implementar Chats.jsx (Cliente)
-[ ] Paso 42: Implementar Marketplace.jsx (Cliente)
-[ ] Paso 43: Implementar Calendario.jsx (Cliente)
+[✓] Paso 38: Implementar Dashboard.jsx (Cliente)
+[✓] Paso 39: Implementar Perfil.jsx (Cliente)
+[✓] Paso 40: Implementar Seguridad.jsx (Cliente)
+[✓] Paso 41: Implementar Chats.jsx (Cliente)
+[✓] Paso 42: Implementar Marketplace.jsx (Cliente)
+[✓] Paso 43: Implementar Calendario.jsx (Cliente)
 
 FASE 9: INTEGRACIÓN Y PRUEBAS
 [ ] Paso 44: Pruebas de autenticación
@@ -635,10 +635,10 @@ FASE 3: ████████████████████████
 FASE 4: █████████████████████████████████████████████████ [100%] ✓ COMPLETADA
 FASE 5: █████████████████████████████████████████████████ [100%] ✓ COMPLETADA
 FASE 6: █████████████████████████████████████████████████ [100%] ✓ COMPLETADA
-FASE 7: ______________________ [0%]
-FASE 8: ______________________ [0%]
+FASE 7: █████████████████████████████████████████████████ [100%] ✓ COMPLETADA
+FASE 8: █████████████████████████████████████████████████ [100%] ✓ COMPLETADA
 FASE 9: ______________________ [0%]
 
-PROGRESO GENERAL: ██████████████████████████░░░░░░░░░░░░░░░░░░ [80%]
+PROGRESO GENERAL: ███████████████████████████████████████████░░░░░░ [95%]
 
 ================================================================================
