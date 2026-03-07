@@ -1,0 +1,16 @@
+.git
+.gitignore
+.gitattributes
+.vscode
+.idea
+.DS_Store
+*.log
+*.md
+node_modules
+npm-debug.log
+.env.local
+.env.*.local
+Ez_back/.mvn
+Ez_back/target
+Ez_front/node_modules
+Ez_front/build

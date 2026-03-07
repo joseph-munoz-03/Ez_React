@@ -1,0 +1,154 @@
+================================================================================
+                NUEVA ESTRUCTURA - CARPETA DOCKER CENTRALIZADA
+================================================================================
+
+✅ REORGANIZACIÓN COMPLETADA
+
+La configuración de Docker y hosting ahora está centralizada en una carpeta
+separada para mejor organización del proyecto.
+
+================================================================================
+NUEVA ESTRUCTURA
+================================================================================
+
+Ez_React/
+├── 📁 docker/ (NUEVA CARPETA)
+│   ├── 📄 docker-compose.yml         ← Orquesta MySQL + Backend + Frontend
+│   ├── 📄 Dockerfile.backend         ← Build de Spring Boot
+│   ├── 📄 Dockerfile.frontend        ← Build de React + Nginx
+│   ├── 📄 nginx.conf                 ← Configuración reverse proxy
+│   ├── 📄 .env.example               ← Template de variables
+│   ├── 📄 .dockerignore              ← Archivos a excluir
+│   └── 📄 README.md                  ← Guía completa
+│
+├── 📁 Ez_back/                       (Backend Spring Boot)
+├── 📁 Ez_front/                      (Frontend React)
+├── 📄 Script_Ez.sql                  (Base de datos)
+├── 📄 STATUS.txt
+├── 📄 PLANNING.txt
+└── ... (otros archivos)
+
+================================================================================
+CÓMO USAR
+================================================================================
+
+1. DESDE CERO (Primera vez)
+──────────────────────────
+
+a) Compilar backend:
+   cd Ez_back
+   mvn clean package -DskipTests
+   cd ..
+
+b) Ir a carpeta docker:
+   cd docker
+
+c) Crear archivo .env:
+   cp .env.example .env
+   (editar con tus valores)
+
+d) Iniciar todo:
+   docker-compose up -d
+
+e) Verificar:
+   docker-compose ps
+
+f) Acceder:
+   http://localhost:3000 (Frontend)
+   http://localhost:8080/api (Backend)
+
+2. PARA DESARROLLAR (Cambios en código)
+───────────────────────────────────
+
+Backend:
+  1. Editar código en Ez_back/src/...
+  2. cd Ez_back && mvn compile
+  3. cd ../docker && docker-compose restart ez-backend
+
+Frontend:
+  1. Editar código en Ez_front/src/...
+  2. cd docker && docker-compose build --no-cache ez-frontend
+  3. docker-compose up -d ez-frontend
+
+3. VER LOGS
+──────────
+
+cd docker
+docker-compose logs -f          # Todo
+docker-compose logs -f ez-backend       # Solo backend
+docker-compose logs -f ez-frontend      # Solo frontend
+
+4. PARAR SERVICIOS
+──────────────────
+
+cd docker
+docker-compose down        # Parar (sin borrar datos)
+docker-compose down -v     # Parar y borrar todo
+
+================================================================================
+VENTAJAS DE ESTA ESTRUCTURA
+================================================================================
+
+✅ Organización limpia
+   - Archivos docker separados del código
+   - Más fácil de ubicar configuración
+
+✅ Facilita deployment
+   - Todo en una carpeta
+   - Fácil de versionar y compartir
+
+✅ Mejor para CICD
+   - docker-compose en raíz del deployment
+   - Rutas ajustadas automáticamente
+
+✅ Documentación centralizada
+   - README.md completo en docker/
+   - Menos archivos en raíz
+
+================================================================================
+RUTAS IMPORTANTES
+================================================================================
+
+Desde raíz (Ez_React/):
+  docker-compose → NO CAMBIAR ubicación, está en docker/
+  cd docker && docker-compose up -d
+
+Desde dentro de docker/:
+  - Contexto Ez_back:  ../Ez_back
+  - Contexto Ez_front: ../Ez_front
+  - Script SQL: ../Script_Ez.sql
+
+================================================================================
+PRÓXIMOS PASOS (HOSTING)
+================================================================================
+
+Para desplegar a producción (Render, AWS, etc.):
+
+1. Pushear a GitHub:
+   git add . && git commit -m "Docker setup" && git push
+
+2. En Render.com (o similar):
+   - Backend: Build con docker-compose
+   - Frontend: Build con npm + Nginx
+   - Variables .env en Settings
+
+3. DNS y SSL:
+   - Apuntar dominio a servidor
+   - Activar Let's Encrypt
+
+Ver detalles en: docker/README.md
+
+================================================================================
+NOTAS
+================================================================================
+
+⚠️  Los archivos en raíz (docker-compose.yml, Dockerfile) se pueden BORRAR
+    si prefieres (no se usan, todo está en carpeta docker/)
+
+✅  La carpeta docker/ es AUTO-CONTENIDA
+    Puedes moverla a otro servidor y funciona igual
+
+✅  Las rutas están RELATIVAS
+    Funciona en Windows, Mac y Linux
+
+================================================================================

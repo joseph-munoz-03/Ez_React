@@ -1,0 +1,269 @@
+================================================================================
+                   HOSTING SETUP - EZ REACT PROJECT
+================================================================================
+
+✅ ESTADO: Totalmente configurado para Docker & Hosting
+
+================================================================================
+1. ESTRUCTURA DOCKER ACTUALIZADA
+================================================================================
+
+Dockerfile (Backend)
+├─ Multi-stage build (reduce tamaño imagen)
+├─ Java 21 + Alpine
+├─ Usuario no-root (seguridad)
+├─ Health checks automáticos
+├─ Optimización memoria JVM
+└─ Tamaño final: ~400MB
+
+Dockerfile (Frontend)
+├─ Build con Node.js 20
+├─ Runtime con Nginx Alpine
+├─ Gzip compression activado
+├─ Usuario no-root (seguridad)
+├─ Health checks automáticos
+├─ Proxy inverso a backend
+└─ Tamaño final: ~50MB
+
+docker-compose.yml
+├─ MySQL 8 (Base de datos)
+├─ Backend Spring Boot (puerto 8080)
+├─ Frontend React + Nginx (puerto 3000)
+├─ Networking automático
+├─ Health checks
+└─ Volumes persistentes
+
+================================================================================
+2. VARIABLES DE ENTORNO (.env.example)
+================================================================================
+
+COPIAR: cp .env.example .env
+EDITAR: Reemplazar con valores reales:
+
+# JWT
+JWT_SECRET=tu-clave-secreta-larga
+
+# Mercado Pago
+MERCADOPAGO_ACCESS_TOKEN=tu-token
+
+# Email (Gmail)
+MAIL_USERNAME=tu-email@gmail.com
+MAIL_PASSWORD=tu-contraseña-app
+MAIL_FROM=noreply@tu-dominio.com
+
+# Frontend
+REACT_APP_API_URL=https://tu-api.com
+
+# Database
+MYSQL_ROOT_PASSWORD=contraseña-fuerte
+MYSQL_USER=ez_user
+MYSQL_PASSWORD=contraseña-fuerte
+
+================================================================================
+3. INSTRUCCIONES DE DESPLIEGUE LOCAL
+================================================================================
+
+A. Con Docker Compose (RECOMENDADO)
+──────────────────────────────────────
+
+1. Compilar Backend (generar JAR)
+   cd Ez_back
+   mvn clean package -DskipTests
+   cd ..
+
+2. Crear archivo .env
+   cp .env.example .env
+   (editar con tus valores)
+
+3. Iniciar contenedores
+   docker-compose up -d
+
+4. Verificar estado
+   docker-compose ps
+
+5. Ver logs
+   docker-compose logs -f
+
+6. Acceder
+   Frontend: http://localhost:3000
+   Backend: http://localhost:8080
+   API: http://localhost:8080/api
+   Health: http://localhost:8080/actuator/health
+
+7. Detener
+   docker-compose down -v
+
+================================================================================
+4. DESPLIEGUE EN PRODUCCIÓN (Render/Heroku/AWS)
+================================================================================
+
+A. RENDER.COM (Recomendado - Fácil)
+────────────────────────────────────
+
+1. Backend (nuevo Web Service)
+   - Repository: tu-repo-github
+   - Branch: main
+   - Build Command: mvn clean package -DskipTests
+   - Start Command: java -jar target/Ez-0.0.1-SNAPSHOT.jar
+   - Plan: Starter ($0.10/hora)
+   - Environment: PostgreSQL (reemplazar MySQL)
+
+2. Frontend (nuevo Static Site)
+   - Repository: tu-repo-github
+   - Branch: main
+   - Build Command: npm run build
+   - Publish Directory: build
+   - Plan: Free
+
+3. Variables de Entorno (Settings → Environment)
+   (Configurar igual a .env.example)
+
+B. AWS EC2 + Docker
+──────────────────
+
+1. Instalar Docker
+   curl -fsSL https://get.docker.com -o get-docker.sh | sh
+   sudo usermod -aG docker $USER
+
+2. Clonar repositorio
+   git clone tu-repo
+   cd Ez_React
+
+3. Configurar .env
+   cp .env.example .env
+   nano .env (editar valores)
+
+4. Iniciar
+   docker-compose up -d
+
+5. Configurar SSL (Let's Encrypt + Nginx)
+   sudo apt install certbot python3-certbot-nginx
+   sudo certbot certonly --std
+   (Copiar certificados a nginx.conf)
+
+C. DOCKERHUB (Push de imágenes)
+────────────────────────────────
+
+1. Build imágenes
+   docker-compose build
+
+2. Tag imágenes
+   docker tag ez-backend:latest tu-usuario/ez-backend:1.0
+   docker tag ez-frontend:latest tu-usuario/ez-frontend:1.0
+
+3. Push
+   docker login
+   docker push tu-usuario/ez-backend:1.0
+   docker push tu-usuario/ez-frontend:1.0
+
+================================================================================
+5. VERIFICACIÓN Y Health CHECKS
+================================================================================
+
+Backend (8080)
+  GET http://localhost:8080/actuator/health
+  ✅ Respuesta esperada: {"status":"UP"}
+
+Frontend (3000)
+  GET http://localhost:3000/
+  ✅ Respuesta esperada: HTML de React
+
+Logs
+  docker-compose logs ez-backend
+  docker-compose logs ez-frontend
+  docker-compose logs mysql
+
+================================================================================
+6. TROUBLESHOOTING
+================================================================================
+
+🔴 Backend no conecta a MySQL
+─────────────────────────────
+solución:
+  - Verificar SPRING_DATASOURCE_URL en .env
+  - docker-compose logs mysql
+  - EsperarHealthCheck de MySQL (~10s)
+
+🔴 Frontend no carga
+───────────────────
+solución:
+  - Verificar REACT_APP_API_URL
+  - npm run build local
+  - docker-compose logs ez-frontend
+
+🔴 Puerto 8080 ya en uso
+────────────────────────
+solución:
+  - Cambiar puerto: docker-compose -p puerto_nuevo up
+
+🔴 Base de datos sin datos
+──────────────────────────
+solución:
+  - Verificar Script_Ez.sql en volumen
+  - docker exec ez-mysql mysql -u root -p ez_dtabse < Script_Ez.sql
+
+================================================================================
+7. MONITOREO Y MANTENIMIENTO
+================================================================================
+
+Limpieza
+  docker-compose down -v              # Detiene y elimina volumes
+  docker system prune                 # Limpia imágenes huérfanas
+  docker images prune                 # Elimina imágenes sin usar
+
+Actualizaciones
+  git pull origin main
+  docker-compose build --no-cache
+  docker-compose up -d
+
+Backups
+  docker exec ez-mysql mysqldump -u root -p ez_dtabse > backup.sql
+  docker cp ez-frontend:/usr/share/nginx/html ./frontend-backup
+
+Logs
+  docker-compose logs --tail=50 -f
+
+================================================================================
+8. CONFIGURACIÓN NGINX (Producción)
+================================================================================
+
+El nginx.conf included:
+  ✅ Compresión GZIP
+  ✅ Cache headers
+  ✅ Proxy inverso a backend
+  ✅ WebSocket support
+  ✅ Rate limiting (configurable)
+  ✅ CORS headers
+
+Personalizar: Ez_front/nginx.conf
+
+================================================================================
+9. CHECKLIST PRE-PRODUCCIÓN
+================================================================================
+
+[ ] Compilar backend sin errores
+[ ] Build frontend sin warnings
+[ ] Crear .env con valores reales
+[ ] Cambiar JWT_SECRET con valor seguro
+[ ] Configurar SMTP para emails
+[ ] Configurar Mercado Pago token
+[ ] Bases de datos inicializadas
+[ ] SSL/TLS configurado
+[ ] Domain Name configurado
+[ ] Backups automáticos
+[ ] Monitoring activo
+[ ] Logs centralizados
+[ ] Rate limiting configurado
+[ ] CORS configurado correctamente
+
+================================================================================
+SOPORTE
+================================================================================
+
+Para errores específicos:
+  1. Revisar logs: docker-compose logs [servicio]
+  2. Verificar health: http://localhost:8080/actuator/health
+  3. Conectividad: docker-compose exec [servicio] ping [otro-servicio]
+  4. Memoria: docker stats
+
+================================================================================

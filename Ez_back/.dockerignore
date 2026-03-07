@@ -1,0 +1,15 @@
+.git
+.gitignore
+.gitattributes
+target/
+src/test
+*.md
+.DS_Store
+.vscode
+.idea
+*.log
+*.class
+node_modules
+npm-debug.log
+.env.local
+.env.*.local
