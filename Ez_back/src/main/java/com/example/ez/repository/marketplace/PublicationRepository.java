@@ -10,7 +10,7 @@ import java.util.List;
 public interface PublicationRepository extends JpaRepository<Publication, Long> {
     List<Publication> findByUsuario(User usuario);
     List<Publication> findByEstado(String estado);
-    List<Publication> findByTituloContainingIgnetCase(String titulo);
+    List<Publication> findByTituloContainingIgnoreCase(String titulo);
     
     @Query("SELECT p FROM Publication p WHERE p.basesDatos LIKE %:baseDatos% AND p.estado = 'ACTIVO'")
     List<Publication> findByBasesDatos(@Param("baseDatos") String baseDatos);
@@ -24,5 +24,6 @@ public interface PublicationRepository extends JpaRepository<Publication, Long> 
     /**
      * Últimas 2 publicaciones ordenadas por fecha de creación (descendente)
      */
-    List<Publication> findTop2ByOrderByCreatedAtDesc();
+    @Query("SELECT p.usuario.nombre, p.fechaCreacion FROM Publication p ORDER BY p.fechaCreacion DESC LIMIT 2")
+    List<?> findTop2ByOrderByFechaCreacionDesc();
 }

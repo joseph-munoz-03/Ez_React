@@ -10,6 +10,7 @@ import theme from '../../themes/theme.config';
 const MarketplaceIngeniero = () => {
   const [userName, setUserName] = useState('Ingeniero');
   const [activeSection, setActiveSection] = useState('marketplace');
+  const [hoveredPublicationId, setHoveredPublicationId] = useState(null);
   const [publications, setPublications] = useState([
     {
       id: 1,
@@ -515,7 +516,7 @@ const MarketplaceIngeniero = () => {
           <div style={publicationsGridStyle}>
             {filteredPublications.length > 0 ? (
               filteredPublications.map((pub) => {
-                const [isHovered, setIsHovered] = React.useState(false);
+                const isHovered = hoveredPublicationId === pub.id;
                 return (
                   <div
                     key={pub.id}
@@ -523,8 +524,8 @@ const MarketplaceIngeniero = () => {
                       ...publicationCardStyle,
                       ...(isHovered ? publicationCardHoverStyle : {}),
                     }}
-                    onMouseEnter={() => setIsHovered(true)}
-                    onMouseLeave={() => setIsHovered(false)}
+                    onMouseEnter={() => setHoveredPublicationId(pub.id)}
+                    onMouseLeave={() => setHoveredPublicationId(null)}
                   >
                     <h3 style={publicationTitleStyle}>{pub.titulo}</h3>
                     <p style={publicationDescriptionStyle}>{pub.descripcion}</p>

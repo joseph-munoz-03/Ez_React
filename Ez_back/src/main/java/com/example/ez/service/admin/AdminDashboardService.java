@@ -249,7 +249,7 @@ public class AdminDashboardService {
             });
             
             // Publicaciones recientes (últimas 2)
-            List<?> recentPubs = publicationRepository.findTop2ByOrderByCreatedAtDesc();
+            List<?> recentPubs = publicationRepository.findTop2ByOrderByFechaCreacionDesc();
             recentPubs.stream().limit(2).forEach(p -> {
                 Object[] pub = (Object[]) p;
                 RecentActivityDTO activity = new RecentActivityDTO();
@@ -276,9 +276,7 @@ public class AdminDashboardService {
         List<RecentSalesDTO> sales = new ArrayList<>();
         
         try {
-            List<?> completedPayments = paymentRepository.findTop10ByStatusOrderByCreatedAtDesc(
-                PaymentStatus.COMPLETADO
-            );
+            List<?> completedPayments = paymentRepository.findTop10ByEstadoOrderByFechaCreacionDesc();
             
             completedPayments.forEach(p -> {
                 Object[] payment = (Object[]) p;

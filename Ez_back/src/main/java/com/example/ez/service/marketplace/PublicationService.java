@@ -106,7 +106,7 @@ public class PublicationService {
      * Buscar por título
      */
     public List<Publication> buscarPorTitulo(String titulo) {
-        return publicationRepository.findByTituloContainingIgnetCase(titulo);
+        return publicationRepository.findByTituloContainingIgnoreCase(titulo);
     }
 
     /**

@@ -11,6 +11,7 @@ import theme from '../../themes/theme.config';
 const MarketplaceCliente = () => {
   const [userName, setUserName] = useState('Cliente');
   const [activeSection, setActiveSection] = useState('marketplace');
+  const [hoveredPublicationId, setHoveredPublicationId] = useState(null);
   const [publications, setPublications] = useState([
     {
       id: 1,
@@ -443,8 +444,8 @@ const MarketplaceCliente = () => {
           <div style={publicationsGridStyle}>
             {filteredPublications.length > 0 ? (
               filteredPublications.map((pub) => {
-                const [isHovered, setIsHovered] = React.useState(false);
                 const isSelected = selectedPublication?.id === pub.id;
+                const isHovered = hoveredPublicationId === pub.id;
                 return (
                   <div
                     key={pub.id}
@@ -452,8 +453,8 @@ const MarketplaceCliente = () => {
                       ...publicationCardStyle(isSelected),
                       ...(isHovered ? publicationCardHoverStyle : {}),
                     }}
-                    onMouseEnter={() => setIsHovered(true)}
-                    onMouseLeave={() => setIsHovered(false)}
+                    onMouseEnter={() => setHoveredPublicationId(pub.id)}
+                    onMouseLeave={() => setHoveredPublicationId(null)}
                     onClick={() => setSelectedPublication(pub)}
                   >
                     <div style={publicationHeaderStyle}>

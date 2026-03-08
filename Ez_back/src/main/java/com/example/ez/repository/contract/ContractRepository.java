@@ -18,7 +18,7 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
     /**
      * Encuentra contratos creados después de una fecha específica
      */
-    @Query("SELECT c FROM Contract c WHERE c.creadoEn >= :from")
+    @Query("SELECT c FROM Contract c WHERE c.fechaCreacion >= :from")
     List<Contract> findByCreatedAtGreaterThanEqual(@Param("from") LocalDateTime from);
     
     /**
@@ -34,6 +34,6 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
     /**
      * Encuentra contratos recientes (últimos 30 días) con datos del cliente
      */
-    @Query("SELECT c.cliente.nombre, c.creadoEn FROM Contract c WHERE c.creadoEn >= :since ORDER BY c.creadoEn DESC")
+    @Query("SELECT c.cliente.nombre, c.fechaCreacion FROM Contract c WHERE c.fechaCreacion >= :since ORDER BY c.fechaCreacion DESC")
     List<?> findRecentContracts(@Param("since") LocalDateTime since);
 }
