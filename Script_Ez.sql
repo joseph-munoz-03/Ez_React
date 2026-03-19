@@ -1,234 +1,242 @@
--- =====================================================
+-- =====================================
 -- CREAR BASE DE DATOS
--- =====================================================
-DROP DATABASE IF EXISTS ez_dtabse;
-CREATE DATABASE ez_dtabse
-CHARACTER SET utf8mb4
-COLLATE utf8mb4_unicode_ci;
+-- =====================================
 
-USE ez_dtabse;
+CREATE DATABASE IF NOT EXISTS ez_db;
+USE ez_db;
 
--- =====================================================
+-- =====================================
 -- TABLA USUARIOS
--- =====================================================
-CREATE TABLE users_ez (
-    id_users INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
-    apellido VARCHAR(100) NOT NULL,
-    documento_user BIGINT UNIQUE,
-    email VARCHAR(150) NOT NULL UNIQUE,
-    contrasena VARCHAR(255) NOT NULL,
-    fecha_nacimiento DATE,
-    genero VARCHAR(20) DEFAULT 'No_Especificado',
-    telefono VARCHAR(20),
-    estado ENUM('activo','inactivo','suspendido') DEFAULT 'activo',
-    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+-- =====================================
 
--- =====================================================
--- TABLA ROLES
--- =====================================================
-CREATE TABLE roles_ez (
-    id_rol INT AUTO_INCREMENT PRIMARY KEY,
-    tipo_rol ENUM('ADMIN','INGENIERO','USUARIO') NOT NULL UNIQUE,
-    descripcion VARCHAR(255),
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+CREATE TABLE users (
 
--- =====================================================
--- RELACIÓN USUARIO - ROL
--- =====================================================
-CREATE TABLE usuarios_roles (
-    id_user INT NOT NULL,
-    id_rol INT NOT NULL,
-    fecha_asignacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id_user, id_rol),
-    FOREIGN KEY (id_user) REFERENCES users_ez(id_users) ON DELETE CASCADE,
-    FOREIGN KEY (id_rol) REFERENCES roles_ez(id_rol) ON DELETE CASCADE
-) ENGINE=InnoDB;
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
 
--- =====================================================
--- PERFIL USUARIO (1 a 1)
--- =====================================================
-CREATE TABLE perfil_usuario_ez (
-    id_perfil INT AUTO_INCREMENT PRIMARY KEY,
-    id_user INT NOT NULL UNIQUE,
-    foto_perfil VARCHAR(500),
-    descripcion TEXT,
-    apodo VARCHAR(100),
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_user) REFERENCES users_ez(id_users) ON DELETE CASCADE
-) ENGINE=InnoDB;
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
 
--- =====================================================
--- ETIQUETAS PERFIL
--- =====================================================
-CREATE TABLE etiquetas_ez (
-    id_etiqueta INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL UNIQUE
-) ENGINE=InnoDB;
+    email VARCHAR(150) UNIQUE NOT NULL,
+    password VARCHAR(255),
 
-CREATE TABLE perfil_etiquetas_ez (
-    id_perfil INT NOT NULL,
-    id_etiqueta INT NOT NULL,
-    fecha_asignacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id_perfil, id_etiqueta),
-    FOREIGN KEY (id_perfil) REFERENCES perfil_usuario_ez(id_perfil) ON DELETE CASCADE,
-    FOREIGN KEY (id_etiqueta) REFERENCES etiquetas_ez(id_etiqueta) ON DELETE CASCADE
-) ENGINE=InnoDB;
+    provider VARCHAR(50),
 
--- =====================================================
--- FORMULARIO DE ESPECIFICACIONES
--- =====================================================
-CREATE TABLE formulario_especificaciones_ez (
-    id_formulario INT AUTO_INCREMENT PRIMARY KEY,
-    id_user INT NOT NULL,
-    titulo VARCHAR(200) NOT NULL,
-    descripcion TEXT NOT NULL,
-    cantidad_entregas INT NOT NULL CHECK (cantidad_entregas BETWEEN 1 AND 30),
-    dias_entrega INT NOT NULL CHECK (dias_entrega BETWEEN 1 AND 30),
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_user) REFERENCES users_ez(id_users) ON DELETE CASCADE
-) ENGINE=InnoDB;
+    role VARCHAR(50),
 
--- =====================================================
--- FORMULARIO DE CONTRATO (NUEVO)
--- =====================================================
-CREATE TABLE contrato_ez (
-    id_contrato INT AUTO_INCREMENT PRIMARY KEY,
-    id_formulario INT NOT NULL,
-    id_cliente INT NOT NULL,
-    id_ingeniero INT NOT NULL,
+    enabled BOOLEAN DEFAULT TRUE,
 
-    tipo_pago ENUM('POR_ENTREGA','TOTAL_INMEDIATO') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 
-    precio_total DECIMAL(12,2) NOT NULL,
-    porcentaje_comision DECIMAL(5,2) DEFAULT 10.00,
-    valor_comision DECIMAL(12,2) NOT NULL,
-    valor_final_ingeniero DECIMAL(12,2) NOT NULL,
+);
 
-    estado ENUM(
-        'BORRADOR',
-        'ACEPTADO',
-        'RECHAZADO',
-        'EN_PROCESO',
-        'FINALIZADO',
-        'CANCELADO'
-    ) DEFAULT 'BORRADOR',
+-- =====================================
+-- TABLA SERVICIOS (MARKETPLACE)
+-- =====================================
 
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+CREATE TABLE services (
 
-    FOREIGN KEY (id_formulario) REFERENCES formulario_especificaciones_ez(id_formulario) ON DELETE CASCADE,
-    FOREIGN KEY (id_cliente) REFERENCES users_ez(id_users) ON DELETE CASCADE,
-    FOREIGN KEY (id_ingeniero) REFERENCES users_ez(id_users) ON DELETE CASCADE
-) ENGINE=InnoDB;
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
 
--- =====================================================
--- PEDIDOS
--- =====================================================
-CREATE TABLE pedidos_ez (
-    id_pedido INT AUTO_INCREMENT PRIMARY KEY,
-    id_contrato INT NOT NULL,
-    estado ENUM(
-        'PENDIENTE',
-        'PAGADO',
-        'EN_PROCESO',
-        'ENTREGADO',
-        'FINALIZADO',
-        'CANCELADO'
-    ) DEFAULT 'PENDIENTE',
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_contrato) REFERENCES contrato_ez(id_contrato) ON DELETE CASCADE
-) ENGINE=InnoDB;
+    title VARCHAR(200),
+    description TEXT,
 
--- =====================================================
--- PAGOS (MERCADOPAGO)
--- =====================================================
-CREATE TABLE pagos_ez (
-    id_pago INT AUTO_INCREMENT PRIMARY KEY,
-    id_pedido INT NOT NULL,
+    price DECIMAL(10,2),
 
-    mercado_pago_payment_id VARCHAR(100),
-    mercado_pago_preference_id VARCHAR(100),
-    mercado_pago_status VARCHAR(50),
+    engineer_id BIGINT,
 
-    monto_pagado DECIMAL(12,2) NOT NULL,
-    moneda VARCHAR(10) DEFAULT 'COP',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    fecha_pago TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (engineer_id) REFERENCES users(id)
 
-    FOREIGN KEY (id_pedido) REFERENCES pedidos_ez(id_pedido) ON DELETE CASCADE
-) ENGINE=InnoDB;
+);
 
--- =====================================================
--- CATÁLOGOS RESTANTES (SIN MODIFICAR)
--- =====================================================
-CREATE TABLE lenguajes_ez (
-    id_lenguaje INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL UNIQUE
-) ENGINE=InnoDB;
+CREATE INDEX idx_services_engineer ON services(engineer_id);
 
-CREATE TABLE formulario_lenguajes_ez (
-    id_formulario INT NOT NULL,
-    id_lenguaje INT NOT NULL,
-    PRIMARY KEY (id_formulario, id_lenguaje),
-    FOREIGN KEY (id_formulario) REFERENCES formulario_especificaciones_ez(id_formulario) ON DELETE CASCADE,
-    FOREIGN KEY (id_lenguaje) REFERENCES lenguajes_ez(id_lenguaje) ON DELETE CASCADE
-) ENGINE=InnoDB;
+-- =====================================
+-- TABLA CONTRATOS
+-- =====================================
 
-CREATE TABLE bases_datos_ez (
-    id_bd INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL UNIQUE
-) ENGINE=InnoDB;
+CREATE TABLE contracts (
 
-CREATE TABLE formulario_bases_datos_ez (
-    id_formulario INT NOT NULL,
-    id_bd INT NOT NULL,
-    PRIMARY KEY (id_formulario, id_bd),
-    FOREIGN KEY (id_formulario) REFERENCES formulario_especificaciones_ez(id_formulario) ON DELETE CASCADE,
-    FOREIGN KEY (id_bd) REFERENCES bases_datos_ez(id_bd) ON DELETE CASCADE
-) ENGINE=InnoDB;
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
 
-CREATE TABLE publicaciones_ez (
-    id_publicacion INT AUTO_INCREMENT PRIMARY KEY,
-    id_user INT NOT NULL,
-    titulo VARCHAR(200) NOT NULL,
-    descripcion TEXT NOT NULL,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_user) REFERENCES users_ez(id_users) ON DELETE CASCADE
-) ENGINE=InnoDB;
+    client_id BIGINT,
+    engineer_id BIGINT,
 
-CREATE TABLE etiquetas_publicacion_ez (
-    id_etiqueta INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL UNIQUE
-) ENGINE=InnoDB;
+    service_id BIGINT,
 
-CREATE TABLE publicacion_etiquetas_ez (
-    id_publicacion INT NOT NULL,
-    id_etiqueta INT NOT NULL,
-    PRIMARY KEY (id_publicacion, id_etiqueta),
-    FOREIGN KEY (id_publicacion) REFERENCES publicaciones_ez(id_publicacion) ON DELETE CASCADE,
-    FOREIGN KEY (id_etiqueta) REFERENCES etiquetas_publicacion_ez(id_etiqueta) ON DELETE CASCADE
-) ENGINE=InnoDB;
+    agreed_price DECIMAL(10,2),
 
--- =====================================================
--- DATOS INICIALES
--- =====================================================
-INSERT INTO roles_ez (tipo_rol, descripcion) VALUES
-('ADMIN','Administrador del sistema'),
-('INGENIERO','Ingeniero del sistema'),
-('USUARIO','Usuario estándar');
+    status VARCHAR(50),
 
-INSERT INTO lenguajes_ez (nombre) VALUES
-('Java'),('Python'),('C#'),('R'),('Ruby'),
-('C++'),('Go'),('HTML'),('C'),('Kotlin'),('JavaScript');
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-INSERT INTO bases_datos_ez (nombre) VALUES
-('MySQL'),('SQL Server'),('MariaDB'),('PostgreSQL');
+    FOREIGN KEY (client_id) REFERENCES users(id),
+    FOREIGN KEY (engineer_id) REFERENCES users(id),
+    FOREIGN KEY (service_id) REFERENCES services(id)
 
-SELECT * FROM users_ez;
+);
+
+CREATE INDEX idx_contract_client ON contracts(client_id);
+CREATE INDEX idx_contract_engineer ON contracts(engineer_id);
+
+-- =====================================
+-- TABLA PEDIDOS
+-- =====================================
+
+CREATE TABLE orders (
+
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    contract_id BIGINT,
+
+    client_id BIGINT,
+
+    amount DECIMAL(10,2),
+
+    status VARCHAR(50),
+
+    payment_reference VARCHAR(200),
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (contract_id) REFERENCES contracts(id),
+    FOREIGN KEY (client_id) REFERENCES users(id)
+
+);
+
+-- =====================================
+-- TABLA ENTREGAS
+-- =====================================
+
+CREATE TABLE entregas (
+
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    order_id BIGINT,
+
+    description TEXT,
+
+    file_url VARCHAR(500),
+
+    status VARCHAR(50),
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (order_id) REFERENCES orders(id)
+
+);
+
+-- =====================================
+-- TABLA PAGOS
+-- =====================================
+
+CREATE TABLE payments (
+
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    order_id BIGINT,
+
+    mercadopago_id VARCHAR(200),
+
+    amount DECIMAL(10,2),
+
+    platform_fee DECIMAL(10,2),
+
+    engineer_amount DECIMAL(10,2),
+
+    status VARCHAR(50),
+
+    payment_type VARCHAR(50),
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (order_id) REFERENCES orders(id)
+
+);
+
+CREATE INDEX idx_payment_order ON payments(order_id);
+
+-- =====================================
+-- TABLA CHAT
+-- =====================================
+
+CREATE TABLE chats (
+
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    client_id BIGINT,
+
+    engineer_id BIGINT,
+
+    contract_id BIGINT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (client_id) REFERENCES users(id),
+    FOREIGN KEY (engineer_id) REFERENCES users(id),
+    FOREIGN KEY (contract_id) REFERENCES contracts(id)
+
+);
+
+-- =====================================
+-- MENSAJES CHAT
+-- =====================================
+
+CREATE TABLE chat_messages (
+
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    chat_id BIGINT,
+
+    sender_id BIGINT,
+
+    message TEXT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (chat_id) REFERENCES chats(id),
+    FOREIGN KEY (sender_id) REFERENCES users(id)
+
+);
+
+-- =====================================
+-- TABLA REPORTES
+-- =====================================
+
+CREATE TABLE reports (
+
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    reporter_id BIGINT,
+
+    reported_user_id BIGINT,
+
+    reason TEXT,
+
+    status VARCHAR(50),
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (reporter_id) REFERENCES users(id),
+    FOREIGN KEY (reported_user_id) REFERENCES users(id)
+
+);
+
+-- =====================================
+-- USUARIOS POR DEFECTO
+-- =====================================
+
+INSERT INTO users (first_name,last_name,email,password,provider,role)
+VALUES
+('Admin','Sistema','admin@ez.com',
+'$2a$10$X0kQ8gC4pZ5JZpQ9pR5A7u7G9j5Q6cX9L8q6z8Q3oY1L5g0e0vM2G',
+'LOCAL','ADMIN'),
+
+('Carlos','Ingeniero','ingeniero@ez.com',
+'$2a$10$X0kQ8gC4pZ5JZpQ9pR5A7u7G9j5Q6cX9L8q6z8Q3oY1L5g0e0vM2G',
+'LOCAL','ENGINEER'),
+
+('Juan','Cliente','cliente@ez.com',
+'$2a$10$X0kQ8gC4pZ5JZpQ9pR5A7u7G9j5Q6cX9L8q6z8Q3oY1L5g0e0vM2G',
+'LOCAL','CLIENT');
